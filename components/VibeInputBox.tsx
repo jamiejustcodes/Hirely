@@ -95,7 +95,7 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.docx,.txt"
+          accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.webp"
           className="hidden"
           onChange={handleFileUpload}
         />

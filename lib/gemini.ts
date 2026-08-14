@@ -1,6 +1,161 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ATSScanResult } from "./mockData";
 
+const ACTIVE_GEMINI_MODELS = [
+  "gemini-flash-latest",
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash",
+  "gemini-3.7-flash",
+  "gemini-3.1-flash-lite",
+];
+
+export async function extractTextAndAnalyzeDocumentWithGemini(
+  fileBuffer: Buffer,
+  mimeType: string,
+  jobDescription?: string,
+  providedApiKey?: string
+): Promise<{ extractedText: string; scanResult: ATSScanResult } | null> {
+  const apiKey = providedApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) return null;
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const base64Data = fileBuffer.toString("base64");
+
+  const targetJob = jobDescription?.trim()
+    ? jobDescription
+    : "Industry standard baseline matching the candidate's exact profession and seniority.";
+
+  const prompt = `
+You are Hirely ATS Engine, an elite resume parser, OCR transcriber, and Applicant Tracking System (ATS) auditor.
+
+TASK REQUIREMENTS:
+1. TRANSCRIBE ENTIRE RESUME: Carefully read the attached document (PDF / image / document) and transcribe the candidate's complete resume text verbatim into the "extractedText" field. Maintain linear single-column section order (Header/Contact, Summary, Experience, Skills, Education, Certifications).
+2. ATS COMPATIBILITY AUDIT: Evaluate the candidate's resume against modern ATS filters and the target job description.
+3. ZERO-FABRICATION POLICY: NEVER invent fake metrics, fake statistics, or fake tools that the candidate never stated. Replace passive duties with executive action verbs.
+
+Target Job Description / Context:
+"""
+${targetJob.slice(0, 8000)}
+"""
+
+Return a STRICT JSON object matching this structure:
+{
+  "extractedText": string (Full verbatim transcription of the resume text),
+  "scanResult": {
+    "overallScore": number (0 to 100),
+    "grade": string (e.g. "Strong Match (Top 15%)", "Moderate Match", "Needs Optimization"),
+    "summary": string (2-3 concise sentences detailing overall fit, strongest skills, and main areas for improvement),
+    "categoryScores": {
+      "keywordMatch": number (0-100),
+      "hardSkills": number (0-100),
+      "softSkills": number (0-100),
+      "formatting": number (0-100),
+      "impactAndMetrics": number (0-100)
+    },
+    "keywords": {
+      "found": [
+        { "name": string, "category": "hard" | "soft" | "tool", "count": number }
+      ],
+      "missing": [
+        { "name": string, "category": "hard" | "soft" | "tool", "importance": "critical" | "recommended" }
+      ]
+    },
+    "formatAudit": {
+      "status": "pass" | "warning" | "fail",
+      "issues": [
+        {
+          "title": string,
+          "severity": "high" | "medium" | "low",
+          "description": string,
+          "fix": string
+        }
+      ]
+    },
+    "bulletImprovements": [
+      {
+        "section": string (e.g. "Work Experience"),
+        "original": string (EXACT verbatim line from resume experience),
+        "improved": string (Honest, executive rewrite with strong action verbs and zero fabricated statistics),
+        "scoreBefore": number (0-100),
+        "scoreAfter": number (0-100),
+        "explanation": string,
+        "appliedFramework": string
+      }
+    ],
+    "recommendedAdditions": [
+      {
+        "category": "missing_section" | "missing_tools" | "missing_scope" | "missing_certification",
+        "title": string,
+        "whyNeeded": string,
+        "suggestedHeading": string,
+        "suggestedContent": string,
+        "impactPoints": number
+      }
+    ],
+    "industryBenchmark": {
+      "detectedProfession": string,
+      "seniorityLevel": string,
+      "industryPercentile": number (0-100),
+      "topTierStandards": [string, string, string],
+      "candidateComparison": [
+        {
+          "dimension": string,
+          "candidateStatus": string,
+          "topTierStandard": string,
+          "status": "below" | "meets" | "exceeds"
+        }
+      ],
+      "adviceForTop1Percent": string
+    },
+    "actionPlan": [string, string, string]
+  }
+}
+`;
+
+  for (const modelName of ACTIVE_GEMINI_MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.1,
+        },
+      });
+
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType === "application/pdf" || mimeType.startsWith("image/") ? mimeType : "application/pdf",
+          },
+        },
+        prompt,
+      ]);
+
+      let textResponse = result.response.text().trim();
+      if (textResponse.startsWith("```")) {
+        textResponse = textResponse.replace(/^```(json)?\n?/, "").replace(/\n?```$/, "");
+      }
+
+      const parsedData = JSON.parse(textResponse) as {
+        extractedText?: string;
+        scanResult?: ATSScanResult;
+      };
+
+      if (parsedData?.extractedText && parsedData.extractedText.length >= 15 && parsedData?.scanResult?.overallScore) {
+        return {
+          extractedText: parsedData.extractedText,
+          scanResult: parsedData.scanResult,
+        };
+      }
+    } catch (err: any) {
+      console.warn(`Direct document model ${modelName} failed, trying next candidate:`, err?.message || err);
+    }
+  }
+
+  return null;
+}
+
 export async function analyzeResumeWithGemini(
   resumeText: string,
   jobDescription?: string,
@@ -9,15 +164,7 @@ export async function analyzeResumeWithGemini(
   const apiKey = providedApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
 
   if (apiKey) {
-    const candidateModels = [
-      "gemini-flash-lite-latest",
-      "gemini-3.1-flash-lite",
-      "gemini-3.1-flash-lite-preview",
-      "gemini-3-flash-preview",
-      "gemini-3.5-flash-lite",
-      "gemini-3.5-flash",
-      "gemini-3.7-flash",
-    ];
+    const candidateModels = ACTIVE_GEMINI_MODELS;
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const targetJob = jobDescription?.trim()

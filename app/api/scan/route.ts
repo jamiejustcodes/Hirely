@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeResumeWithGemini } from "@/lib/gemini";
+import { analyzeResumeWithGemini, extractTextAndAnalyzeDocumentWithGemini } from "@/lib/gemini";
 import { normalizeResumeText } from "@/lib/utils";
 import { getClientIp, checkRateLimit } from "@/lib/rateLimit";
 import pdfParse from "pdf-parse";
@@ -13,6 +13,9 @@ export async function POST(req: NextRequest) {
     let jobDescription = "";
     let apiKey = "";
     let fileName = "Uploaded_Resume.pdf";
+    let fileBuffer: Buffer | null = null;
+    let fileMimeType = "application/pdf";
+    let precomputedScanResult: any = null;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -25,79 +28,42 @@ export async function POST(req: NextRequest) {
         fileName = file.name || "Uploaded_Resume.pdf";
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
+        fileBuffer = buffer;
         const lowerName = (file.name || "").toLowerCase();
         const mimeType = (file.type || "").toLowerCase();
+        fileMimeType = mimeType || "application/pdf";
 
         // Check magic bytes
         const isPdfMagic = buffer.length >= 5 && buffer.subarray(0, 5).toString("latin1") === "%PDF-";
         const isZipMagic = buffer.length >= 4 && buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04;
         const isPdf = isPdfMagic || lowerName.endsWith(".pdf") || mimeType.includes("pdf");
         const isDocx = isZipMagic || lowerName.endsWith(".docx") || lowerName.endsWith(".doc") || mimeType.includes("word") || mimeType.includes("officedocument");
+        const isImage = mimeType.startsWith("image/") || lowerName.endsWith(".png") || lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".webp");
 
         if (isPdf) {
           try {
             const pdfData = await pdfParse(buffer);
             if (pdfData.text && pdfData.text.trim().length >= 15) {
               resumeText = normalizeResumeText(pdfData.text);
-            } else {
-              throw new Error("Extracted text was too short, attempting fallback stream extraction");
             }
           } catch (pdfErr) {
-            console.warn("Primary pdf-parse failed, attempting stream extraction fallback:", pdfErr);
-            // Fallback: Extract text from uncompressed PDF text blocks (Tj / TJ / BT ... ET)
-            try {
-              const rawString = buffer.toString("latin1");
-              const textChunks: string[] = [];
-              
-              // Match text inside (...) Tj
-              const tjRegex = /\(([^)]+)\)\s*Tj/g;
-              let tjMatch;
-              while ((tjMatch = tjRegex.exec(rawString)) !== null) {
-                textChunks.push(tjMatch[1]);
-              }
-
-              // Match array text inside [...] TJ
-              const arrayTjRegex = /\[([^\]]+)\]\s*TJ/g;
-              let arrayMatch;
-              while ((arrayMatch = arrayTjRegex.exec(rawString)) !== null) {
-                const inner = arrayMatch[1];
-                const innerStrings = inner.match(/\(([^)]+)\)/g);
-                if (innerStrings) {
-                  textChunks.push(innerStrings.map(s => s.slice(1, -1)).join(""));
-                }
-              }
-
-              if (textChunks.length > 0) {
-                const recovered = textChunks.join(" ");
-                if (recovered.trim().length >= 15) {
-                  resumeText = normalizeResumeText(recovered);
-                }
-              }
-            } catch (fallbackErr) {
-              console.error("PDF stream fallback error:", fallbackErr);
-            }
-
-            if (!resumeText || resumeText.trim().length < 15) {
-              return NextResponse.json(
-                { error: "Could not extract text from this PDF. If this is a scanned image or photo of a resume, please upload a text-based PDF / DOCX or paste the text directly." },
-                { status: 400 }
-              );
-            }
+            console.warn("Local pdf-parse failed, will use direct Gemini document analysis:", pdfErr);
           }
         } else if (isDocx) {
           try {
             const docxResult = await mammoth.extractRawText({ buffer });
-            resumeText = normalizeResumeText(docxResult.value);
+            if (docxResult.value && docxResult.value.trim().length >= 15) {
+              resumeText = normalizeResumeText(docxResult.value);
+            }
           } catch (docxErr) {
-            console.error("DOCX parse error:", docxErr);
-            return NextResponse.json(
-              { error: "Could not extract text from Word document. Please ensure the file is a valid .docx document or paste text directly." },
-              { status: 400 }
-            );
+            console.warn("DOCX parse error, will use direct Gemini fallback:", docxErr);
           }
-        } else {
+        } else if (!isImage) {
           // Plain text / Markdown / UTF-8
-          resumeText = normalizeResumeText(buffer.toString("utf-8"));
+          const decoded = buffer.toString("utf-8");
+          if (decoded && decoded.trim().length >= 15) {
+            resumeText = normalizeResumeText(decoded);
+          }
         }
       } else if (textParam.trim()) {
         resumeText = normalizeResumeText(textParam.trim());
@@ -119,6 +85,21 @@ export async function POST(req: NextRequest) {
         } catch {
           resumeText = "";
         }
+      }
+    }
+
+    // If local text extraction yielded < 15 chars but we have a raw file buffer (e.g. mobile PDF, scanned resume, image)
+    if ((!resumeText || resumeText.trim().length < 15) && fileBuffer) {
+      const directResult = await extractTextAndAnalyzeDocumentWithGemini(
+        fileBuffer,
+        fileMimeType,
+        jobDescription,
+        apiKey
+      );
+
+      if (directResult?.extractedText && directResult.extractedText.length >= 15) {
+        resumeText = normalizeResumeText(directResult.extractedText);
+        precomputedScanResult = directResult.scanResult;
       }
     }
 
@@ -157,8 +138,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Call live Gemini engine
-    const scanResult = await analyzeResumeWithGemini(resumeText, jobDescription, apiKey);
+    // Call live Gemini engine if not already precomputed by multimodal direct extraction
+    const scanResult = precomputedScanResult || (await analyzeResumeWithGemini(resumeText, jobDescription, apiKey));
 
     return NextResponse.json(
       {
