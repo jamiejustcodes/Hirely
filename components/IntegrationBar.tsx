@@ -35,11 +35,11 @@ export function IntegrationBar() {
           {/* Left Column */}
           <div className="space-y-2 sm:pr-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold tracking-wider text-blue-600 uppercase flex items-center gap-1.5">
+              <span className="text-xs font-sans font-semibold text-sky-600 flex items-center gap-1.5">
                 <Shield className="w-3.5 h-3.5" />
                 Targeted ATS Parsing Engines
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200/80">
+              <span className="text-[11px] font-sans text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200/80">
                 100% Tested
               </span>
             </div>
@@ -47,7 +47,7 @@ export function IntegrationBar() {
               {atsSystems.map((ats) => (
                 <div
                   key={ats.name}
-                  className={`px-3 py-1 rounded-lg bg-zinc-50 border border-zinc-200/80 text-xs font-mono text-zinc-700 transition-all duration-200 hover:scale-105 hover:bg-white cursor-default ${ats.color}`}
+                  className={`px-3 py-1 rounded-lg bg-zinc-50 border border-zinc-200/80 text-xs font-sans font-medium text-zinc-700 transition-all duration-200 hover:scale-105 hover:bg-white cursor-default ${ats.color}`}
                 >
                   {ats.name}
                 </div>
@@ -58,11 +58,11 @@ export function IntegrationBar() {
           {/* Right Column */}
           <div className="space-y-2 pt-4 md:pt-0 sm:pl-6">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold tracking-wider text-purple-600 uppercase flex items-center gap-1.5">
+              <span className="text-xs font-sans font-semibold text-purple-600 flex items-center gap-1.5">
                 <Share2 className="w-3.5 h-3.5" />
                 Integrations & Formats
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200/80">
+              <span className="text-[11px] font-sans text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200/80">
                 Live Pipelines
               </span>
             </div>
@@ -70,10 +70,10 @@ export function IntegrationBar() {
               {tools.map((tool) => (
                 <div
                   key={tool.name}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-50 border border-zinc-200/80 text-xs font-mono text-zinc-700 transition-all duration-200 hover:text-zinc-950 hover:border-purple-300 cursor-default"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-50 border border-zinc-200/80 text-xs font-sans font-medium text-zinc-700 transition-all duration-200 hover:text-zinc-950 hover:border-purple-300 cursor-default"
                 >
                   <span>{tool.name}</span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-50 text-purple-600 font-bold border border-purple-200/60">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 font-semibold border border-purple-200/60">
                     {tool.badge}
                   </span>
                 </div>

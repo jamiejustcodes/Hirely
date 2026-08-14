@@ -42,13 +42,13 @@ export function SpotlightCard({
     >
       {/* Light Mouse Spotlight Glow */}
       <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-500"
+        className="pointer-events-none absolute -inset-px transition-opacity duration-500 z-0"
         style={{
           opacity: isHovered ? 1 : 0,
           background: `radial-gradient(400px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 80%)`,
         }}
       />
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-10 w-full">{children}</div>
     </div>
   );
 }

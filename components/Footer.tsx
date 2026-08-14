@@ -15,7 +15,7 @@ export function Footer({}: FooterProps = {}) {
       <div className="max-w-7xl mx-auto space-y-12 relative z-10">
         {/* Pre-footer Call to Action Card (Cluely Style) */}
         <div className="rounded-3xl p-8 sm:p-12 bg-[#fafafa] border border-zinc-200/90 text-center space-y-6 max-w-4xl mx-auto shadow-xs">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-950 flex items-center justify-center mx-auto shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-sky-500 flex items-center justify-center mx-auto shadow-md shadow-sky-500/25">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div className="space-y-2">
@@ -29,9 +29,9 @@ export function Footer({}: FooterProps = {}) {
           <div>
             <button
               onClick={scrollToTop}
-              className="px-6 py-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white font-semibold text-xs tracking-wide shadow-sm hover:shadow transition-all duration-200 inline-flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white font-semibold text-xs tracking-wide shadow-md shadow-sky-500/25 hover:shadow-lg hover:shadow-sky-500/35 transition-all duration-200 inline-flex items-center gap-2"
             >
-              <Sparkles className="w-4 h-4 text-blue-400" />
+              <Sparkles className="w-4 h-4 text-sky-100" />
               <span>Start Free ATS Scan</span>
             </button>
           </div>
@@ -57,10 +57,10 @@ export function Footer({}: FooterProps = {}) {
           </div>
 
           <div className="space-y-2">
-            <span className="font-mono font-bold text-zinc-950 uppercase tracking-wider text-[10px]">
+            <span className="font-sans font-semibold text-zinc-950 text-xs">
               ATS Systems
             </span>
-            <ul className="space-y-1 text-zinc-600 font-mono text-[11px]">
+            <ul className="space-y-1.5 text-zinc-600 font-sans text-xs">
               <li><a href="#integrations" className="hover:text-zinc-950 transition-colors">Workday</a></li>
               <li><a href="#integrations" className="hover:text-zinc-950 transition-colors">Taleo</a></li>
               <li><a href="#integrations" className="hover:text-zinc-950 transition-colors">Greenhouse</a></li>
@@ -69,10 +69,10 @@ export function Footer({}: FooterProps = {}) {
           </div>
 
           <div className="space-y-2">
-            <span className="font-mono font-bold text-zinc-950 uppercase tracking-wider text-[10px]">
+            <span className="font-sans font-semibold text-zinc-950 text-xs">
               Features
             </span>
-            <ul className="space-y-1 text-zinc-600 font-mono text-[11px]">
+            <ul className="space-y-1.5 text-zinc-600 font-sans text-xs">
               <li><a href="#workflow" className="hover:text-zinc-950 transition-colors">How it Works</a></li>
               <li><a href="#features" className="hover:text-zinc-950 transition-colors">Keyword Matrix</a></li>
               <li><a href="#features" className="hover:text-zinc-950 transition-colors">STAR Rewriter</a></li>
@@ -81,10 +81,10 @@ export function Footer({}: FooterProps = {}) {
           </div>
 
           <div className="space-y-2">
-            <span className="font-mono font-bold text-zinc-950 uppercase tracking-wider text-[10px]">
+            <span className="font-sans font-semibold text-zinc-950 text-xs">
               Resources
             </span>
-            <ul className="space-y-1 text-zinc-600 font-mono text-[11px]">
+            <ul className="space-y-1.5 text-zinc-600 font-sans text-xs">
               <li><a href="#faq" className="hover:text-zinc-950 transition-colors">ATS FAQ</a></li>
               <li><a href="#testimonials" className="hover:text-zinc-950 transition-colors">Stories</a></li>
               <li>
@@ -97,7 +97,7 @@ export function Footer({}: FooterProps = {}) {
         </div>
 
         {/* Bottom copyright */}
-        <div className="pt-8 border-t border-zinc-200/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
+        <div className="pt-8 border-t border-zinc-200/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-sans">
           <p>© {new Date().getFullYear()} Hirely AI. All rights reserved.</p>
           <div className="flex items-center gap-3">
             <span>Powered by Gemini 2.5 Flash</span>

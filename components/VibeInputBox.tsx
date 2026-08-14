@@ -102,31 +102,31 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
 
         {/* Top Presets & Active File */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-2 border-b border-zinc-100 text-xs">
-          <div className="flex items-center gap-2 flex-wrap font-mono">
-            <span className="text-[11px] text-zinc-400 font-semibold flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-blue-600" />
-              QUICK DEMO:
+          <div className="flex items-center gap-2 flex-wrap font-sans">
+            <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+              Try sample roles:
             </span>
             <button
               type="button"
               onClick={() => loadSample("softwareEngineer")}
-              className="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 font-medium transition-colors flex items-center gap-1.5"
+              className="px-3 py-1 rounded-full bg-zinc-100/80 hover:bg-zinc-200/70 border border-zinc-200/60 text-zinc-700 font-sans text-xs font-medium transition-all flex items-center gap-1.5 shadow-2xs hover:border-zinc-300"
             >
-              <Zap className="w-3 h-3 text-blue-600" />
+              <Zap className="w-3 h-3 text-sky-500" />
               Senior Full-Stack Engineer
             </button>
             <button
               type="button"
               onClick={() => loadSample("productManager")}
-              className="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 font-medium transition-colors flex items-center gap-1.5"
+              className="px-3 py-1 rounded-full bg-zinc-100/80 hover:bg-zinc-200/70 border border-zinc-200/60 text-zinc-700 font-sans text-xs font-medium transition-all flex items-center gap-1.5 shadow-2xs hover:border-zinc-300"
             >
-              <Briefcase className="w-3 h-3 text-purple-600" />
+              <Briefcase className="w-3 h-3 text-indigo-500" />
               Lead Product Manager
             </button>
           </div>
 
           {selectedFile && (
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-mono text-[11px] font-medium">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200/80 font-sans text-xs font-medium">
               <FileText className="w-3.5 h-3.5" />
               <span className="max-w-[150px] truncate">{selectedFile.name}</span>
               <button
@@ -156,13 +156,14 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
           {showJobInput && (
             <div className="pt-3 border-t border-dashed border-zinc-200 animate-fadeIn">
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-mono font-bold tracking-wider text-blue-600 uppercase flex items-center gap-1">
-                  <Briefcase className="w-3 h-3" /> Target Job Description (For Exact Keyword Match)
+                <label className="text-xs font-sans font-semibold text-zinc-700 flex items-center gap-1.5">
+                  <Briefcase className="w-3.5 h-3.5 text-sky-600" />
+                  Target Job Description (Optional)
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowJobInput(false)}
-                  className="text-xs text-zinc-400 hover:text-zinc-600 font-mono"
+                  className="text-xs text-zinc-400 hover:text-zinc-600 font-sans"
                 >
                   Hide
                 </button>
@@ -202,12 +203,12 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
             )}
           </div>
 
-          {/* Action Trigger Button (Jet Black) */}
+          {/* Action Trigger Button (Cyan Blue matching background) */}
           <button
             type="button"
             onClick={() => handleSubmit()}
             disabled={isLoading}
-            className="px-6 py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-semibold tracking-wide shadow-sm hover:shadow transition-all duration-200 flex items-center gap-2 disabled:opacity-60"
+            className="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white text-xs font-semibold tracking-wide shadow-md shadow-sky-500/25 hover:shadow-lg hover:shadow-sky-500/35 transition-all duration-200 flex items-center gap-2 disabled:opacity-60"
           >
             {isLoading ? (
               <>

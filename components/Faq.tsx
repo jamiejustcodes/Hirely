@@ -55,9 +55,9 @@ export function Faq() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="text-center space-y-3"
         >
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-zinc-200 text-blue-600 text-xs font-mono shadow-xs">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-zinc-200 text-sky-600 text-xs font-sans font-medium shadow-xs">
             <HelpCircle className="w-3.5 h-3.5" />
-            FREQUENTLY ASKED QUESTIONS
+            Frequently Asked Questions
           </div>
           <h2 className="text-3xl sm:text-5xl font-sans font-bold text-zinc-950 tracking-tight leading-[1.15]">
             Everything you need to know about ATS screening.

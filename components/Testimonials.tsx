@@ -100,9 +100,9 @@ export function Testimonials() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="max-w-3xl mx-auto text-center space-y-3"
         >
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-blue-600 text-xs font-mono shadow-2xs">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-sky-600 text-xs font-sans font-medium shadow-2xs">
             <Sparkles className="w-3.5 h-3.5" />
-            CANDIDATE OUTCOMES
+            Candidate Outcomes
           </div>
           <h2 className="text-3xl sm:text-5xl font-sans font-bold text-zinc-950 tracking-tight leading-[1.15]">
             Trusted by candidates who landed at FAANG and top startups.
@@ -131,7 +131,7 @@ export function Testimonials() {
                       <Star key={starI} className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     ))}
                   </div>
-                  <div className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-mono font-bold">
+                  <div className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-sans font-semibold">
                     ATS {item.atsScoreBefore} → {item.atsScoreAfter}
                   </div>
                 </div>
