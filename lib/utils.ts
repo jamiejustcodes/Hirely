@@ -44,61 +44,58 @@ export function formatScoreGrade(score: number): {
 }
 
 /**
- * Normalizes raw extracted text from PDFs by:
- * 1. Attaching isolated bullet points ("•" on its own line) to the next line.
- * 2. Merging wrapped lines within the same bullet point into a single continuous sentence.
+ * Normalizes raw extracted text from PDFs and messy formats by:
+ * 1. Unifying all bullet characters (•, -, *, unicode bullets) to standard "•".
+ * 2. Fixing isolated bullet lines (e.g. a line containing ONLY "•" followed by text on the next line).
+ * 3. Joining mid-sentence line breaks within the same bullet point into a single, complete sentence.
  */
 export function normalizeResumeText(raw: string): string {
   if (!raw) return "";
-  const lines = raw.split(/\r?\n/);
-  const result: string[] = [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) {
-      if (result.length > 0 && result[result.length - 1] !== "") {
-        result.push("");
+  // 1. Unify all bullet variants (\u2022, \u2023, \u25E6, \u25CF, \u25CB, \u25A0, \u00B7, \u2043, \u2219)
+  let text = raw.replace(/[\u2022\u2023\u25E6\u25CF\u25CB\u25A0\u00B7\u2043\u2219]/g, "•");
+
+  // 2. Fix isolated bullets on their own line: "•\nText" -> "• Text"
+  text = text.replace(/^[ \t]*•[ \t]*\r?\n[ \t]*/gm, "• ");
+  text = text.replace(/^[ \t]*[-*][ \t]*\r?\n[ \t]*/gm, "• ");
+
+  // 3. Process line by line to glue continuation lines
+  const rawLines = text.split(/\r?\n/);
+  const cleanLines: string[] = [];
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const current = rawLines[i].trim();
+    if (!current) {
+      if (cleanLines.length > 0 && cleanLines[cleanLines.length - 1] !== "") {
+        cleanLines.push("");
       }
       continue;
     }
 
-    // Isolated bullet point (e.g. "•" or "-" or "*" on its own line)
-    if (result.length > 0 && /^[•\-\*]$/.test(result[result.length - 1].trim())) {
-      result[result.length - 1] = `${result[result.length - 1].trim()} ${line}`;
-      continue;
-    }
-
-    // Check if line is a new section or standalone item
-    const isHeaderOrSection =
-      /^(EXPERIENCE|EDUCATION|SKILLS|SUMMARY|PROJECTS|CERTIFICATIONS|WORK HISTORY|PROFESSIONAL EXPERIENCE)/i.test(
-        line
+    // Check if previous line is a bullet item that should absorb this line
+    const prev = cleanLines.length > 0 ? cleanLines[cleanLines.length - 1] : "";
+    const prevIsBullet = prev.trim().startsWith("•") || prev.trim().startsWith("-");
+    const currentIsBullet = current.startsWith("•") || current.startsWith("-") || current.startsWith("*");
+    const currentIsSectionHeader =
+      /^[A-Z\s]{4,}:?$/.test(current) ||
+      /^(EXPERIENCE|EDUCATION|SKILLS|SUMMARY|PROJECTS|CERTIFICATIONS|WORK HISTORY|PROFESSIONAL EXPERIENCE|SUMMARY OF QUALIFICATIONS|WORK EXPERIENCE)/i.test(
+        current
       ) ||
-      /^[A-Z\s]{4,}:?$/.test(line) ||
-      /\b(19|20)\d{2}\b/.test(line);
+      /\b(19|20)\d{2}\s*[-–—]\s*(Present|\b(19|20)\d{2}\b)/i.test(current);
 
-    const isNewBullet = /^[•\-\*]/.test(line);
-
-    // If previous line was a bullet and this line is a continuation (not a new bullet or section)
-    if (
-      result.length > 0 &&
-      result[result.length - 1].trim().length > 0 &&
-      !isNewBullet &&
-      !isHeaderOrSection &&
-      /^[•\-\*]/.test(result[result.length - 1].trim())
-    ) {
-      result[result.length - 1] = `${result[result.length - 1].trim()} ${line}`;
+    if (prevIsBullet && !currentIsBullet && !currentIsSectionHeader) {
+      cleanLines[cleanLines.length - 1] = `${prev.trim()} ${current}`;
     } else {
-      result.push(line);
+      cleanLines.push(current);
     }
   }
 
-  return result.join("\n");
+  return cleanLines.join("\n");
 }
 
 /**
- * Robust replacement for multi-line / wrapped bullet points.
- * Finds the entire bullet block (from starting bullet symbol to continuation lines)
- * and cleanly drops in the new improved STAR sentence without leaving any trailing fragments.
+ * Replaces a bullet point in the resume document with the improved STAR version.
+ * Handles exact matching, partial matching, multi-line blocks, and cleans up any trailing fragments.
  */
 export function replaceBulletBlock(
   content: string,
@@ -106,52 +103,38 @@ export function replaceBulletBlock(
   improved: string
 ): string {
   if (!content) return "";
+
+  // Normalize document and inputs first
+  const normDoc = normalizeResumeText(content);
   const cleanOriginal = original.replace(/^["'•\-* ]+/, "").trim();
-  const cleanImproved = improved.replace(/^["']|["']$/g, "").trim();
+  const cleanImproved = improved.replace(/^["'•\-* ]+|["']$/g, "").trim();
 
-  // 1. Direct exact match
-  if (content.includes(original)) {
-    return content.replace(original, cleanImproved);
-  }
-  if (content.includes(cleanOriginal)) {
-    return content.replace(cleanOriginal, cleanImproved);
+  // 1. Direct exact replace in normalized document
+  if (normDoc.includes(cleanOriginal)) {
+    return normDoc.replace(cleanOriginal, cleanImproved);
   }
 
-  // 2. Multi-line bullet block matching
-  const lines = content.split("\n");
+  // 2. Fuzzy snippet match on lines
+  const lines = normDoc.split("\n");
   const searchSnippet = cleanOriginal.slice(0, 25).toLowerCase();
 
-  let matchStartIdx = -1;
+  let matchIndex = -1;
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].toLowerCase().includes(searchSnippet)) {
-      matchStartIdx = i;
+    const lineClean = lines[i].replace(/^["'•\-* ]+/, "").trim().toLowerCase();
+    if (lineClean.includes(searchSnippet) || searchSnippet.includes(lineClean.slice(0, 25))) {
+      matchIndex = i;
       break;
     }
   }
 
-  if (matchStartIdx !== -1) {
-    const firstLine = lines[matchStartIdx];
-    const prefixMatch = firstLine.match(/^(\s*[•\-\*]\s*)/);
+  if (matchIndex !== -1) {
+    const oldLine = lines[matchIndex];
+    const prefixMatch = oldLine.match(/^(\s*[•\-\*]\s*)/);
     const prefix = prefixMatch ? prefixMatch[1] : "• ";
-
-    // Find the full extent of this bullet block (consume continuation lines)
-    let matchEndIdx = matchStartIdx;
-    while (
-      matchEndIdx + 1 < lines.length &&
-      lines[matchEndIdx + 1].trim() !== "" &&
-      !/^[•\-\*]/.test(lines[matchEndIdx + 1].trim()) &&
-      !/^(EXPERIENCE|EDUCATION|SKILLS|SUMMARY|PROJECTS)/i.test(lines[matchEndIdx + 1].trim()) &&
-      !/^[A-Z\s]{4,}:?$/.test(lines[matchEndIdx + 1].trim())
-    ) {
-      matchEndIdx++;
-    }
-
-    // Replace the entire block [matchStartIdx ... matchEndIdx]
-    const replacement = `${prefix}${cleanImproved.replace(/^[•\-\*]\s*/, "")}`;
-    lines.splice(matchStartIdx, matchEndIdx - matchStartIdx + 1, replacement);
+    lines[matchIndex] = `${prefix}${cleanImproved}`;
     return lines.join("\n");
   }
 
-  // Fallback: append cleanly
-  return `${content}\n\n• ${cleanImproved.replace(/^[•\-\*]\s*/, "")}`;
+  // Fallback: append
+  return `${normDoc}\n\n• ${cleanImproved}`;
 }

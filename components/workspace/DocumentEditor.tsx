@@ -11,6 +11,7 @@ import {
   FileText,
 } from "lucide-react";
 import { ATSBulletImprovement } from "@/lib/mockData";
+import { normalizeResumeText } from "@/lib/utils";
 
 interface DocumentEditorProps {
   content: string;
@@ -39,18 +40,19 @@ export function DocumentEditor({
     explanation: string;
   } | null>(null);
 
-  const wordsCount = content ? content.trim().split(/\s+/).filter(Boolean).length : 0;
-  const charsCount = content.length;
+  const cleanDoc = normalizeResumeText(content);
+  const wordsCount = cleanDoc ? cleanDoc.trim().split(/\s+/).filter(Boolean).length : 0;
+  const charsCount = cleanDoc.length;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(cleanDoc);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Helper to render interactive sentence highlighting (GPTZero Style)
+  // Render interactive sentence highlighting (GPTZero Style)
   const renderHighlightedContent = () => {
-    if (!content) {
+    if (!cleanDoc) {
       return (
         <div className="text-zinc-400 italic py-12 text-center text-xs">
           No resume content loaded. Upload a PDF or paste your CV to start scanning.
@@ -58,35 +60,39 @@ export function DocumentEditor({
       );
     }
 
-    const lines = content.split("\n");
+    const lines = cleanDoc.split("\n");
 
     return (
       <div className="space-y-3 font-sans text-sm leading-relaxed text-zinc-900">
         {lines.map((line, lineIdx) => {
-          if (!line.trim()) {
+          const trimmed = line.trim();
+          if (!trimmed) {
             return <div key={lineIdx} className="h-2" />;
           }
 
           // Check if this line matches an improvement
+          const cleanLine = trimmed.replace(/^["'•\-* ]+/, "").toLowerCase();
           const matchingImprovement = bulletImprovements.find((b) => {
-            const cleanOriginal = b.original.replace(/^["'•\-* ]+/, "").trim().slice(0, 25).toLowerCase();
-            const cleanLine = line.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
-            return cleanLine.includes(cleanOriginal) || cleanOriginal.includes(cleanLine.slice(0, 25));
+            const cleanOriginal = b.original.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
+            return (
+              cleanLine.includes(cleanOriginal.slice(0, 25)) ||
+              cleanOriginal.includes(cleanLine.slice(0, 25))
+            );
           });
 
           if (matchingImprovement) {
             return (
               <div key={lineIdx} className="relative group/line">
-                <span
+                <div
                   onClick={() => {
                     setActivePopover(matchingImprovement);
                     onSelectBullet?.(matchingImprovement);
                   }}
-                  className="bg-[#ffebee] text-zinc-900 px-1 py-0.5 rounded cursor-pointer border-b-2 border-[#ef5350] hover:bg-[#ffcdd2] transition-colors inline"
+                  className="bg-[#ffebee] text-zinc-900 p-1 rounded-md cursor-pointer border border-[#ef5350]/30 hover:bg-[#ffcdd2] transition-colors"
                   title="Click to view STAR rewrite"
                 >
-                  {line}
-                </span>
+                  <span>{line}</span>
+                </div>
 
                 {/* Floating 1-Click Improvement Popover */}
                 {activePopover?.original === matchingImprovement.original && (
@@ -133,15 +139,17 @@ export function DocumentEditor({
 
           // Check if line contains strong quantifiable metrics
           const isStrongMetric =
-            (line.includes("%") || line.includes("$") || line.includes("engineered") || line.includes("spearheaded") || line.includes("accelerated")) &&
-            (line.trim().startsWith("-") || line.trim().startsWith("•") || line.trim().startsWith("*"));
+            (trimmed.includes("%") ||
+              trimmed.includes("$") ||
+              trimmed.toLowerCase().includes("engineered") ||
+              trimmed.toLowerCase().includes("spearheaded") ||
+              trimmed.toLowerCase().includes("accelerated")) &&
+            (trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*"));
 
           if (isStrongMetric) {
             return (
-              <div key={lineIdx}>
-                <span className="bg-[#e8f5e9] text-zinc-900 px-1 py-0.5 rounded border-b border-[#81c784] inline">
-                  {line}
-                </span>
+              <div key={lineIdx} className="bg-[#e8f5e9] text-zinc-900 p-1 rounded-md border border-[#81c784]/30">
+                <span>{line}</span>
               </div>
             );
           }
