@@ -14,9 +14,7 @@ import { motion } from "framer-motion";
 import { SpotlightCard } from "./SpotlightCard";
 import { ScoreGauge } from "./ui/ScoreGauge";
 
-interface FeatureScrollSpyProps {
-  onTryDemo?: () => void;
-}
+interface FeatureScrollSpyProps {}
 
 const SECTIONS = [
   { id: "keywords", label: "Keyword Extraction" },
@@ -25,7 +23,7 @@ const SECTIONS = [
   { id: "match-score", label: "Match Score Engine" },
 ];
 
-export function FeatureScrollSpy({ onTryDemo }: FeatureScrollSpyProps) {
+export function FeatureScrollSpy({}: FeatureScrollSpyProps = {}) {
   const [activeSection, setActiveSection] = useState<string>("keywords");
 
   useEffect(() => {
@@ -120,13 +118,13 @@ export function FeatureScrollSpy({ onTryDemo }: FeatureScrollSpyProps) {
               })}
 
               <div className="pt-4 mt-4 border-t border-zinc-100">
-                <button
-                  onClick={onTryDemo}
+                <a
+                  href="#hero"
                   className="w-full py-2.5 px-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  Try Live Scanner
-                </button>
+                  Try Scanner
+                </a>
               </div>
             </div>
           </div>
@@ -327,13 +325,13 @@ export function FeatureScrollSpy({ onTryDemo }: FeatureScrollSpyProps) {
                     Hirely provides an objective candidate scorecard across 5 critical dimensions: Keyword Alignment, Hard Skill Density, Quantified STAR Metrics, Layout Parsability, and Role Context.
                   </p>
                   <div className="pt-2">
-                    <button
-                      onClick={onTryDemo}
-                      className="px-5 py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-semibold transition-colors flex items-center gap-2 shadow-sm"
+                    <a
+                      href="#hero"
+                      className="px-5 py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-semibold transition-colors inline-flex items-center gap-2 shadow-sm"
                     >
-                      <span>Test Your Resume Score</span>
+                      <span>Scan Your Resume</span>
                       <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                    </button>
+                    </a>
                   </div>
                 </div>
               </SpotlightCard>

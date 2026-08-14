@@ -75,30 +75,19 @@ export default function Home() {
     }
   };
 
-  const handleOpenScannerDirect = () => {
-    if (typeof window !== "undefined") {
-      const sample = SAMPLE_DATA.softwareEngineer;
-      sessionStorage.setItem("HIRELY_SCAN_TEXT", sample.resumeText);
-      sessionStorage.setItem("HIRELY_SCAN_JD", sample.jobDescription);
-      sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", "Alex_Morgan_Software_Engineer_Resume.pdf");
-      sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(sample.mockResult));
-    }
-    router.push("/scan");
-  };
-
   return (
     <main className="min-h-screen bg-white text-zinc-950 flex flex-col selection:bg-blue-500/20 selection:text-zinc-950">
-      {/* Sleek Cluely White Minimalist Navbar */}
-      <Navbar onOpenScanner={handleOpenScannerDirect} />
+      {/* Sleek Minimalist Navbar */}
+      <Navbar />
 
       {/* Ultra-Clean Hero Section with Full-Bleed Scenic Backdrop and Vibe Input */}
       <Hero onScan={handleScan} isLoading={isLoading} />
 
-      {/* Cluely 3-Step Auto-Progressing Workflow Timeline */}
+      {/* 3-Step Auto-Progressing Workflow Timeline */}
       <CluelyStepSlider />
 
       {/* Feature Deep Dive with Spotlight Cards */}
-      <FeatureScrollSpy onTryDemo={handleOpenScannerDirect} />
+      <FeatureScrollSpy />
 
       {/* Candidate Stories on White Canvas */}
       <Testimonials />
@@ -106,8 +95,8 @@ export default function Home() {
       {/* FAQ in Clean White Accordions */}
       <Faq />
 
-      {/* White Minimalist Footer */}
-      <Footer onOpenScanner={handleOpenScannerDirect} />
+      {/* Minimalist Footer */}
+      <Footer />
     </main>
   );
 }

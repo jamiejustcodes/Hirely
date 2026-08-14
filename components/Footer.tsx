@@ -1,13 +1,11 @@
 "use client";
 
 import React from "react";
-import { ScanText, Sparkles, Shield, ArrowUp } from "lucide-react";
+import { Sparkles, Shield, ArrowUp } from "lucide-react";
 
-interface FooterProps {
-  onOpenScanner?: () => void;
-}
+interface FooterProps {}
 
-export function Footer({ onOpenScanner }: FooterProps) {
+export function Footer({}: FooterProps = {}) {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -30,10 +28,7 @@ export function Footer({ onOpenScanner }: FooterProps) {
           </div>
           <div>
             <button
-              onClick={() => {
-                scrollToTop();
-                onOpenScanner?.();
-              }}
+              onClick={scrollToTop}
               className="px-6 py-3 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white font-semibold text-xs tracking-wide shadow-sm hover:shadow transition-all duration-200 inline-flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4 text-blue-400" />
@@ -46,12 +41,11 @@ export function Footer({ onOpenScanner }: FooterProps) {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 pt-8 border-t border-zinc-200/60 text-xs">
           <div className="col-span-2 space-y-3">
             <a href="#" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-zinc-950 flex items-center justify-center">
-                <ScanText className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-zinc-950 font-sans lowercase">
-                hirely<span className="text-blue-600">.ai</span>
-              </span>
+              <img
+                src="/hirelynav.png"
+                alt="Hirely"
+                className="h-6 w-auto object-contain brightness-0"
+              />
             </a>
             <p className="text-zinc-500 max-w-sm leading-relaxed">
               Undetectable ATS optimization and reverse-engineering suite powered by Google Gemini 2.5 Flash.

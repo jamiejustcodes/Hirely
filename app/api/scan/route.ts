@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeResumeWithGemini } from "@/lib/gemini";
 import { normalizeResumeText } from "@/lib/utils";
 import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,20 +24,32 @@ export async function POST(req: NextRequest) {
         fileName = file.name;
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
+        const lowerName = file.name.toLowerCase();
 
-        if (file.name.toLowerCase().endsWith(".pdf")) {
+        if (lowerName.endsWith(".pdf")) {
           try {
             const pdfData = await pdfParse(buffer);
             resumeText = normalizeResumeText(pdfData.text);
           } catch (pdfErr) {
             console.error("PDF parse error:", pdfErr);
             return NextResponse.json(
-              { error: "Could not extract text from PDF. Please ensure the PDF is not password-protected." },
+              { error: "Could not extract text from PDF. Please ensure the PDF is not password-protected or encrypted." },
+              { status: 400 }
+            );
+          }
+        } else if (lowerName.endsWith(".docx") || lowerName.endsWith(".doc")) {
+          try {
+            const docxResult = await mammoth.extractRawText({ buffer });
+            resumeText = normalizeResumeText(docxResult.value);
+          } catch (docxErr) {
+            console.error("DOCX parse error:", docxErr);
+            return NextResponse.json(
+              { error: "Could not extract text from Word document. Please ensure the file is a valid .docx document." },
               { status: 400 }
             );
           }
         } else {
-          // Plain text / markdown
+          // Plain text / Markdown
           resumeText = normalizeResumeText(buffer.toString("utf-8"));
         }
       } else if (textParam.trim()) {

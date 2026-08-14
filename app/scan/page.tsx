@@ -8,7 +8,21 @@ import { DocumentEditor } from "@/components/workspace/DocumentEditor";
 import { DiagnosticPanel } from "@/components/workspace/DiagnosticPanel";
 import { ATSScanResult, SAMPLE_DATA } from "@/lib/mockData";
 import { replaceBulletBlock, normalizeResumeText } from "@/lib/utils";
-import { Sparkles, Key, Check, ArrowLeft, UploadCloud, X, FileText } from "lucide-react";
+import {
+  Sparkles,
+  Key,
+  Check,
+  ArrowLeft,
+  UploadCloud,
+  X,
+  FileText,
+  Briefcase,
+  Undo2,
+  ChevronDown,
+  RotateCw,
+  LayoutTemplate,
+  PieChart,
+} from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function ScanWorkspacePage() {
@@ -20,16 +34,22 @@ export default function ScanWorkspacePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [newScanModalOpen, setNewScanModalOpen] = useState(false);
+  const [jobDrawerOpen, setJobDrawerOpen] = useState(false);
   const [customApiKey, setCustomApiKey] = useState("");
   const [apiKeySaved, setApiKeySaved] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"editor" | "diagnostic">("editor");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Undo History Stack
+  const [historyStack, setHistoryStack] = useState<string[]>([]);
+  const [undoToast, setUndoToast] = useState<{ visible: boolean; message: string } | null>(null);
 
   // Ingest data from sessionStorage on load
   useEffect(() => {
     try {
       const storedText = sessionStorage.getItem("HIRELY_SCAN_TEXT");
       const storedJd = sessionStorage.getItem("HIRELY_SCAN_JD") || "";
-      const storedDocName = sessionStorage.getItem("HIRELY_SCAN_DOC_NAME") || "My_Resume.pdf";
+      const storedDocName = sessionStorage.getItem("HIRELY_SCAN_DOC_NAME") || "Alex_Morgan_Resume.pdf";
       const storedResult = sessionStorage.getItem("HIRELY_SCAN_RESULT");
 
       if (storedText) {
@@ -62,6 +82,19 @@ export default function ScanWorkspacePage() {
       setScanResult(sample.mockResult);
     }
   }, []);
+
+  const pushToHistory = (previousContent: string) => {
+    setHistoryStack((prev) => [...prev.slice(-10), previousContent]);
+  };
+
+  const handleUndo = () => {
+    if (historyStack.length === 0) return;
+    const previous = historyStack[historyStack.length - 1];
+    setHistoryStack((prev) => prev.slice(0, -1));
+    setContent(previous);
+    sessionStorage.setItem("HIRELY_SCAN_TEXT", previous);
+    setUndoToast(null);
+  };
 
   const handlePerformScan = async (textToScan: string, jdToScan: string) => {
     if (!textToScan || textToScan.trim().length < 15) return;
@@ -100,8 +133,8 @@ export default function ScanWorkspacePage() {
       if (json.data?.overallScore >= 80) {
         try {
           confetti({
-            particleCount: 30,
-            spread: 45,
+            particleCount: 35,
+            spread: 50,
             origin: { y: 0.6 },
           });
         } catch (e) {}
@@ -154,14 +187,19 @@ export default function ScanWorkspacePage() {
     }
   };
 
-  // Full-bullet block replacement & immediate suggestion removal
+  // Full-bullet block replacement & immediate suggestion removal with Undo
   const handleApplyImprovement = (original: string, improved: string) => {
     if (!content) return;
+    pushToHistory(content);
+
     const updated = replaceBulletBlock(content, original, improved);
     setContent(updated);
     sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
 
-    // Remove the applied suggestion from bulletImprovements so it disappears immediately
+    // Show interactive undo toast
+    setUndoToast({ visible: true, message: "STAR rewrite applied to document" });
+    setTimeout(() => setUndoToast(null), 5000);
+
     if (scanResult) {
       const cleanOrig = original.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
       const remaining = (scanResult.bulletImprovements || []).filter((b) => {
@@ -185,9 +223,10 @@ export default function ScanWorkspacePage() {
     }
   };
 
-  // 1-Click apply ALL STAR improvements across entire resume & clear suggestions
+  // 1-Click apply ALL STAR improvements across entire resume
   const handleApplyAllImprovements = () => {
     if (!content || !scanResult?.bulletImprovements?.length) return;
+    pushToHistory(content);
 
     let updated = content;
     scanResult.bulletImprovements.forEach((bullet) => {
@@ -197,11 +236,14 @@ export default function ScanWorkspacePage() {
     setContent(updated);
     sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
 
+    setUndoToast({ visible: true, message: "All STAR rewrites applied to document" });
+    setTimeout(() => setUndoToast(null), 6000);
+
     if (scanResult) {
       setScanResult({
         ...scanResult,
         overallScore: Math.min(99, scanResult.overallScore + 12),
-        bulletImprovements: [], // Clears all since all were applied!
+        bulletImprovements: [],
         categoryScores: {
           ...scanResult.categoryScores,
           impactAndMetrics: 98,
@@ -212,6 +254,8 @@ export default function ScanWorkspacePage() {
 
   const handleInsertKeyword = (keyword: string) => {
     if (!content) return;
+    pushToHistory(content);
+
     const skillsKeywords = ["TECHNICAL SKILLS:", "SKILLS:", "Skills:", "Technical Skills:"];
     let updated = content;
     let foundHeading = false;
@@ -230,6 +274,9 @@ export default function ScanWorkspacePage() {
 
     setContent(updated);
     sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
+
+    setUndoToast({ visible: true, message: `Added keyword: "${keyword}"` });
+    setTimeout(() => setUndoToast(null), 4000);
 
     if (scanResult) {
       setScanResult({
@@ -264,7 +311,7 @@ export default function ScanWorkspacePage() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf,.docx,.txt"
+        accept=".pdf,.docx,.doc,.txt"
         className="hidden"
         onChange={handleFileUpload}
       />
@@ -280,19 +327,64 @@ export default function ScanWorkspacePage() {
             <span>Home</span>
           </Link>
           <div className="h-3.5 w-[1px] bg-zinc-200" />
-          <span className="text-xs font-semibold text-zinc-900 tracking-tight">
-            hirely<span className="text-blue-600">.ai</span> / studio
-          </span>
+          <Link href="/" className="flex items-center gap-1.5">
+            <img
+              src="/hirelynav.png"
+              alt="Hirely"
+              className="h-5 w-auto object-contain brightness-0"
+            />
+            <span className="text-[11px] font-mono text-zinc-400 font-normal">/ studio</span>
+          </Link>
+        </div>
+
+        {/* Mobile/Tablet Segment Control Switcher */}
+        <div className="flex lg:hidden items-center p-0.5 rounded-lg bg-zinc-100 border border-zinc-200 text-xs">
+          <button
+            onClick={() => setMobileTab("editor")}
+            className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+              mobileTab === "editor"
+                ? "bg-white text-zinc-950 shadow-2xs font-semibold"
+                : "text-zinc-600"
+            }`}
+          >
+            <LayoutTemplate className="w-3 h-3 text-blue-600" />
+            <span>Document</span>
+          </button>
+          <button
+            onClick={() => setMobileTab("diagnostic")}
+            className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+              mobileTab === "diagnostic"
+                ? "bg-white text-zinc-950 shadow-2xs font-semibold"
+                : "text-zinc-600"
+            }`}
+          >
+            <PieChart className="w-3 h-3 text-emerald-600" />
+            <span>ATS Diagnostic ({scanResult?.overallScore || 80}%)</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Target Role Drawer Toggle */}
+          <button
+            onClick={() => setJobDrawerOpen(!jobDrawerOpen)}
+            className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors border shadow-2xs ${
+              jobDrawerOpen
+                ? "bg-blue-50 border-blue-200 text-blue-700 font-semibold"
+                : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5 text-blue-600" />
+            <span className="hidden sm:inline">Target Role</span>
+            <ChevronDown className={`w-3 h-3 transition-transform ${jobDrawerOpen ? "rotate-180" : ""}`} />
+          </button>
+
           {scanResult?.bulletImprovements?.length ? (
             <button
               onClick={handleApplyAllImprovements}
               className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Apply All Rewrites ({scanResult.bulletImprovements.length})</span>
+              <span>Apply All ({scanResult.bulletImprovements.length})</span>
             </button>
           ) : null}
 
@@ -306,44 +398,108 @@ export default function ScanWorkspacePage() {
         </div>
       </header>
 
-      {/* Main 3-Pane Split Layout (GPTZero Style) */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* In-Workspace Collapsible Target Job Description Drawer */}
+      {jobDrawerOpen && (
+        <div className="border-b border-zinc-200 bg-white px-6 py-4 shadow-sm z-20 animate-fadeIn">
+          <div className="max-w-4xl mx-auto space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-blue-600" />
+                <h4 className="text-xs font-bold text-zinc-900 font-sans uppercase">
+                  Target Job Description & Role Context
+                </h4>
+              </div>
+              <span className="text-[11px] text-zinc-400 font-mono">
+                Paste new job post to re-score keyword match against specific requirements
+              </span>
+            </div>
+
+            <textarea
+              rows={3}
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              placeholder="Paste the target job posting to compare exact ATS keywords, tech stack requirements, and seniority..."
+              className="w-full p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-blue-500 resize-none font-sans"
+            />
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-zinc-500">
+                {jobDescription.length ? `${jobDescription.split(/\s+/).filter(Boolean).length} words in target job` : "Using standard industry benchmark role baseline"}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setJobDrawerOpen(false)}
+                  className="px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-xs font-medium"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setJobDrawerOpen(false);
+                    sessionStorage.setItem("HIRELY_SCAN_JD", jobDescription);
+                    handlePerformScan(content, jobDescription);
+                  }}
+                  className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
+                >
+                  <RotateCw className="w-3 h-3" />
+                  <span>Update & Re-scan ATS Score</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main 3-Pane Layout */}
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Pane 1: Slim Left Sidebar */}
         <WorkspaceSidebar
           onNewScan={() => setNewScanModalOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
         />
 
-        {/* Pane 2: Center Document Editor Canvas with Sentence Highlighting */}
-        <DocumentEditor
-          content={content}
-          onChangeContent={(newText) => {
-            setContent(newText);
-            sessionStorage.setItem("HIRELY_SCAN_TEXT", newText);
-          }}
-          bulletImprovements={scanResult?.bulletImprovements || []}
-          documentName={documentName}
-          onApplyImprovement={handleApplyImprovement}
-        />
+        {/* Pane 2: Center Document Editor (Hidden on mobile when diagnostic tab is active) */}
+        <div className={`flex-1 flex flex-col ${mobileTab === "diagnostic" ? "hidden lg:flex" : "flex"}`}>
+          <DocumentEditor
+            content={content}
+            onChangeContent={(newText) => {
+              setContent(newText);
+              sessionStorage.setItem("HIRELY_SCAN_TEXT", newText);
+            }}
+            bulletImprovements={scanResult?.bulletImprovements || []}
+            documentName={documentName}
+            onApplyImprovement={handleApplyImprovement}
+          />
+        </div>
 
-        {/* Pane 3: Right ATS Diagnostic Assistant Panel */}
-        <DiagnosticPanel
-          result={scanResult}
-          isLoading={isLoading}
-          onRescan={() => handlePerformScan(content, jobDescription)}
-          onApplyImprovement={handleApplyImprovement}
-          onInsertKeyword={handleInsertKeyword}
-          onApplyAllImprovements={handleApplyAllImprovements}
-          onExportReport={() => {
-            const blob = new Blob([content], { type: "text/plain" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `ATS_Optimized_${documentName.replace(/\.[^/.]+$/, "")}.txt`;
-            a.click();
-          }}
-        />
+        {/* Pane 3: Right ATS Diagnostic Assistant Panel (Hidden on mobile when editor tab is active) */}
+        <div className={`w-full lg:w-[460px] flex-shrink-0 flex flex-col ${mobileTab === "editor" ? "hidden lg:flex" : "flex"}`}>
+          <DiagnosticPanel
+            result={scanResult}
+            isLoading={isLoading}
+            onRescan={() => handlePerformScan(content, jobDescription)}
+            onApplyImprovement={handleApplyImprovement}
+            onInsertKeyword={handleInsertKeyword}
+            onApplyAllImprovements={handleApplyAllImprovements}
+            documentContent={content}
+            documentName={documentName}
+          />
+        </div>
       </div>
+
+      {/* Interactive Undo Toast Notification */}
+      {undoToast && (
+        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 bg-zinc-950 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3 text-xs border border-zinc-800 animate-fadeIn">
+          <span className="font-medium">{undoToast.message}</span>
+          <button
+            onClick={handleUndo}
+            className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold flex items-center gap-1 transition-colors text-[11px]"
+          >
+            <Undo2 className="w-3 h-3" />
+            <span>Undo</span>
+          </button>
+        </div>
+      )}
 
       {/* API Key Modal */}
       {settingsOpen && (
@@ -362,7 +518,7 @@ export default function ScanWorkspacePage() {
               </button>
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Google Gemini 3.5 Flash is currently connected. You can also override with another personal API key:
+              Google Gemini 2.5 Flash is currently connected. You can also override with another personal API key:
             </p>
             <input
               type="password"

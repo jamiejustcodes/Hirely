@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Sparkles, ScanText, Menu, X } from "lucide-react";
+import { Sparkles, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface NavbarProps {
-  onOpenScanner?: () => void;
-}
+interface NavbarProps {}
 
-export function Navbar({ onOpenScanner }: NavbarProps) {
+export function Navbar({}: NavbarProps = {}) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -30,26 +28,16 @@ export function Navbar({ onOpenScanner }: NavbarProps) {
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Top Left Logo (White on Hero, Dark when scrolled) */}
-        <a href="#" className="flex items-center gap-2.5 group">
-          <div
+        {/* Top Left Brand Logo (hirelynav.png) */}
+        <a href="#" className="flex items-center group py-0.5">
+          <img
+            src="/hirelynav.png"
+            alt="Hirely"
             className={cn(
-              "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm",
-              scrolled
-                ? "bg-zinc-950 text-white"
-                : "bg-white text-blue-600 shadow-md ring-1 ring-white/50"
+              "h-7 sm:h-8 w-auto object-contain transition-all duration-300",
+              scrolled ? "brightness-0" : "brightness-100 drop-shadow-sm"
             )}
-          >
-            <ScanText className="w-4 h-4" />
-          </div>
-          <span
-            className={cn(
-              "text-xl font-bold tracking-tight font-sans lowercase transition-colors duration-300",
-              scrolled ? "text-zinc-950" : "text-white drop-shadow-sm"
-            )}
-          >
-            hirely<span className={scrolled ? "text-blue-600" : "text-blue-300"}>.ai</span>
-          </span>
+          />
         </a>
 
         {/* Center Pill Navigation */}
@@ -118,10 +106,10 @@ export function Navbar({ onOpenScanner }: NavbarProps) {
           </a>
         </nav>
 
-        {/* Top Right Button (Crisp White Button on Hero, Dark when scrolled) */}
+        {/* Top Right Button (Scroll to #hero scanner) */}
         <div className="hidden md:flex items-center gap-3">
-          <button
-            onClick={onOpenScanner}
+          <a
+            href="#hero"
             className={cn(
               "px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md",
               scrolled
@@ -130,8 +118,8 @@ export function Navbar({ onOpenScanner }: NavbarProps) {
             )}
           >
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Launch Free Scanner</span>
-          </button>
+            <span>Scan Resume</span>
+          </a>
         </div>
 
         {/* Mobile menu button */}
@@ -186,16 +174,14 @@ export function Navbar({ onOpenScanner }: NavbarProps) {
           >
             FAQ
           </a>
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              onOpenScanner?.();
-            }}
+          <a
+            href="#hero"
+            onClick={() => setMobileMenuOpen(false)}
             className="w-full py-2.5 rounded-xl bg-zinc-950 text-white text-sm font-semibold flex items-center justify-center gap-2"
           >
             <Sparkles className="w-4 h-4 text-blue-400" />
-            <span>Launch Free Scanner</span>
-          </button>
+            <span>Scan Resume</span>
+          </a>
         </div>
       )}
     </header>

@@ -26,10 +26,14 @@ export function WorkspaceSidebar({
         {/* Brand Logo */}
         <Link
           href="/"
-          className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-blue-700 transition-colors"
+          className="w-8 h-8 rounded-lg bg-zinc-950 hover:bg-blue-600 text-white flex items-center justify-center p-1.5 shadow-sm transition-all duration-200"
           title="Hirely Home"
         >
-          H
+          <img
+            src="/hirleyweblogo.png"
+            alt="Hirely"
+            className="w-full h-full object-contain"
+          />
         </Link>
 
         {/* Primary Action Button (+ New Scan) */}

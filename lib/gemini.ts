@@ -9,7 +9,16 @@ export async function analyzeResumeWithGemini(
   const apiKey = providedApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
 
   if (apiKey) {
-    const candidateModels = ["gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-latest", "gemini-pro-latest"];
+    const candidateModels = [
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro",
+      "gemini-flash-latest",
+      "gemini-pro-latest",
+      "gemini-3.5-flash",
+      "gemini-3.7-flash",
+    ];
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const targetJob = jobDescription?.trim()
@@ -128,7 +137,13 @@ Return a STRICT JSON object matching this exact structure:
         });
 
         const result = await model.generateContent(prompt);
-        const textResponse = result.response.text();
+        let textResponse = result.response.text().trim();
+
+        // Strip markdown code fences if present
+        if (textResponse.startsWith("```")) {
+          textResponse = textResponse.replace(/^```(json)?\n?/, "").replace(/\n?```$/, "");
+        }
+
         const parsedData = JSON.parse(textResponse) as ATSScanResult;
         return parsedData;
       } catch (err: any) {
