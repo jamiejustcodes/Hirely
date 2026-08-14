@@ -50,7 +50,7 @@ export function DocumentEditor({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Render interactive sentence highlighting (GPTZero Style)
+  // Render interactive sentence highlighting with natural text flow & bottom underline
   const renderHighlightedContent = () => {
     if (!cleanDoc) {
       return (
@@ -63,7 +63,7 @@ export function DocumentEditor({
     const lines = cleanDoc.split("\n");
 
     return (
-      <div className="space-y-3 font-sans text-sm leading-relaxed text-zinc-900">
+      <div className="space-y-2.5 font-sans text-sm leading-relaxed text-zinc-900">
         {lines.map((line, lineIdx) => {
           const trimmed = line.trim();
           if (!trimmed) {
@@ -81,18 +81,27 @@ export function DocumentEditor({
           });
 
           if (matchingImprovement) {
+            const isBullet = trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*");
+            const bulletPrefix = trimmed.startsWith("•") ? "•" : trimmed.startsWith("-") ? "-" : "*";
+            const textBody = isBullet ? trimmed.replace(/^[•\-\*]\s*/, "") : trimmed;
+
             return (
               <div key={lineIdx} className="relative group/line">
-                <div
-                  onClick={() => {
-                    setActivePopover(matchingImprovement);
-                    onSelectBullet?.(matchingImprovement);
-                  }}
-                  className="bg-[#ffebee] text-zinc-900 p-1 rounded-md cursor-pointer border border-[#ef5350]/30 hover:bg-[#ffcdd2] transition-colors"
-                  title="Click to view STAR rewrite"
-                >
-                  <span>{line}</span>
-                </div>
+                <p className="text-zinc-900 leading-relaxed">
+                  {isBullet && (
+                    <span className="text-zinc-700 mr-2 font-bold select-none">{bulletPrefix}</span>
+                  )}
+                  <span
+                    onClick={() => {
+                      setActivePopover(matchingImprovement);
+                      onSelectBullet?.(matchingImprovement);
+                    }}
+                    className="bg-[#ffebee] text-zinc-950 px-1 py-0.5 rounded-xs border-b-2 border-[#ef5350] hover:bg-[#ffcdd2] cursor-pointer inline transition-colors"
+                    title="Click to view STAR rewrite"
+                  >
+                    {textBody}
+                  </span>
+                </p>
 
                 {/* Floating 1-Click Improvement Popover */}
                 {activePopover?.original === matchingImprovement.original && (
@@ -147,14 +156,23 @@ export function DocumentEditor({
             (trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*"));
 
           if (isStrongMetric) {
+            const isBullet = trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*");
+            const bulletPrefix = trimmed.startsWith("•") ? "•" : trimmed.startsWith("-") ? "-" : "*";
+            const textBody = isBullet ? trimmed.replace(/^[•\-\*]\s*/, "") : trimmed;
+
             return (
-              <div key={lineIdx} className="bg-[#e8f5e9] text-zinc-900 p-1 rounded-md border border-[#81c784]/30">
-                <span>{line}</span>
-              </div>
+              <p key={lineIdx} className="text-zinc-900 leading-relaxed">
+                {isBullet && (
+                  <span className="text-zinc-700 mr-2 font-bold select-none">{bulletPrefix}</span>
+                )}
+                <span className="bg-[#e8f5e9] text-zinc-950 px-1 py-0.5 rounded-xs border-b-2 border-[#81c784] inline">
+                  {textBody}
+                </span>
+              </p>
             );
           }
 
-          return <p key={lineIdx} className="text-zinc-800">{line}</p>;
+          return <p key={lineIdx} className="text-zinc-800 leading-relaxed">{line}</p>;
         })}
       </div>
     );
