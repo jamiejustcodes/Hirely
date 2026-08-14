@@ -23,17 +23,49 @@ export default function Home() {
     setIsLoading(true);
 
     try {
+      let savedKey = "";
+      if (typeof window !== "undefined") {
+        savedKey = localStorage.getItem("HIRELY_GEMINI_API_KEY") || "";
+      }
+
+      // If file was attached, process through /api/scan to parse PDF and analyze
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("jobDescription", jobDesc);
+        formData.append("resumeText", resumeText);
+        if (savedKey) formData.append("apiKey", savedKey);
+
+        const response = await fetch("/api/scan", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("HIRELY_SCAN_TEXT", json.extractedText || resumeText);
+            sessionStorage.setItem("HIRELY_SCAN_JD", jobDesc);
+            sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", json.documentName || file.name);
+            sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
+          }
+          router.push("/scan");
+          return;
+        }
+      }
+
+      // Fallback for direct text input
       const textToUse = resumeText || SAMPLE_DATA.softwareEngineer.resumeText;
       const jdToUse = jobDesc || SAMPLE_DATA.softwareEngineer.jobDescription;
-      const docName = file ? file.name : "Marcus_Vance_Staff_Engineer_Resume.pdf";
+      const docName = file ? file.name : "My_Resume.pdf";
 
       if (typeof window !== "undefined") {
         sessionStorage.setItem("HIRELY_SCAN_TEXT", textToUse);
         sessionStorage.setItem("HIRELY_SCAN_JD", jdToUse);
         sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", docName);
+        sessionStorage.removeItem("HIRELY_SCAN_RESULT"); // Force fresh scan on /scan
       }
 
-      // Navigate to dedicated GPTZero-style studio page
       router.push("/scan");
     } catch (err) {
       console.error("Scan redirect error:", err);
@@ -48,7 +80,7 @@ export default function Home() {
       const sample = SAMPLE_DATA.softwareEngineer;
       sessionStorage.setItem("HIRELY_SCAN_TEXT", sample.resumeText);
       sessionStorage.setItem("HIRELY_SCAN_JD", sample.jobDescription);
-      sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", "Marcus_Vance_Staff_Engineer_Resume.pdf");
+      sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", "Alex_Morgan_Software_Engineer_Resume.pdf");
       sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(sample.mockResult));
     }
     router.push("/scan");

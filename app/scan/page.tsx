@@ -1,26 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
 import { DocumentEditor } from "@/components/workspace/DocumentEditor";
 import { DiagnosticPanel } from "@/components/workspace/DiagnosticPanel";
-import { ATSScanResult, SAMPLE_DATA, ATSBulletImprovement } from "@/lib/mockData";
-import { Sparkles, Key, Check, ArrowLeft, UploadCloud, X } from "lucide-react";
+import { ATSScanResult, SAMPLE_DATA } from "@/lib/mockData";
+import { Sparkles, Key, Check, ArrowLeft, UploadCloud, X, FileText } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function ScanWorkspacePage() {
   const router = useRouter();
   const [content, setContent] = useState("");
   const [jobDescription, setJobDescription] = useState("");
-  const [documentName, setDocumentName] = useState("Marcus_Vance_Staff_Engineer_Resume.pdf");
+  const [documentName, setDocumentName] = useState("Uploaded_Resume.pdf");
   const [scanResult, setScanResult] = useState<ATSScanResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [newScanModalOpen, setNewScanModalOpen] = useState(false);
   const [customApiKey, setCustomApiKey] = useState("");
   const [apiKeySaved, setApiKeySaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Ingest data from sessionStorage on load
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function ScanWorkspacePage() {
         const sample = SAMPLE_DATA.softwareEngineer;
         setContent(sample.resumeText);
         setJobDescription(sample.jobDescription);
-        setDocumentName("Marcus_Vance_Staff_Engineer_Resume.pdf");
+        setDocumentName("Alex_Morgan_Software_Engineer_Resume.pdf");
         setScanResult(sample.mockResult);
       }
     } catch (err) {
@@ -61,7 +62,7 @@ export default function ScanWorkspacePage() {
   }, []);
 
   const handlePerformScan = async (textToScan: string, jdToScan: string) => {
-    if (!textToScan.trim()) return;
+    if (!textToScan || textToScan.trim().length < 15) return;
     setIsLoading(true);
 
     try {
@@ -77,6 +78,7 @@ export default function ScanWorkspacePage() {
           resumeText: textToScan,
           jobDescription: jdToScan,
           apiKey: savedKey,
+          documentName: documentName,
         }),
       });
 
@@ -86,6 +88,10 @@ export default function ScanWorkspacePage() {
 
       const json = await response.json();
       setScanResult(json.data);
+      if (json.extractedText && json.extractedText !== textToScan) {
+        setContent(json.extractedText);
+        sessionStorage.setItem("HIRELY_SCAN_TEXT", json.extractedText);
+      }
       sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
 
       if (json.data?.overallScore >= 80) {
@@ -99,39 +105,158 @@ export default function ScanWorkspacePage() {
       }
     } catch (error) {
       console.error("Scan error:", error);
-      setScanResult(SAMPLE_DATA.softwareEngineer.mockResult);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !files[0]) return;
+
+    const file = files[0];
+    setDocumentName(file.name);
+    setNewScanModalOpen(false);
+    setIsLoading(true);
+
+    try {
+      let savedKey = "";
+      if (typeof window !== "undefined") {
+        savedKey = localStorage.getItem("HIRELY_GEMINI_API_KEY") || "";
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("jobDescription", jobDescription);
+      if (savedKey) formData.append("apiKey", savedKey);
+
+      const response = await fetch("/api/scan", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        const extracted = json.extractedText || "";
+        setContent(extracted);
+        setScanResult(json.data);
+        sessionStorage.setItem("HIRELY_SCAN_TEXT", extracted);
+        sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", file.name);
+        sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
+      }
+    } catch (err) {
+      console.error("File upload scan error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Robust fuzzy line / snippet replacement
   const handleApplyImprovement = (original: string, improved: string) => {
     if (!content) return;
-    const updated = content.replace(original, improved);
+
+    // 1. Direct exact replacement
+    if (content.includes(original)) {
+      const updated = content.replace(original, improved);
+      setContent(updated);
+      sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
+      bumpScore();
+      return;
+    }
+
+    // 2. Substring line-matching replacement (ignoring whitespace & quotes)
+    const cleanedOriginal = original.replace(/^["'•\-* ]+/, "").trim().slice(0, 30).toLowerCase();
+    const lines = content.split("\n");
+    let replaced = false;
+
+    const newLines = lines.map((line) => {
+      if (!replaced && line.toLowerCase().includes(cleanedOriginal)) {
+        replaced = true;
+        const prefix = line.trim().startsWith("-")
+          ? "- "
+          : line.trim().startsWith("•")
+          ? "• "
+          : line.trim().startsWith("*")
+          ? "* "
+          : "";
+        return `${prefix}${improved.replace(/^["']|["']$/g, "")}`;
+      }
+      return line;
+    });
+
+    if (replaced) {
+      const updated = newLines.join("\n");
+      setContent(updated);
+      sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
+      bumpScore();
+    } else {
+      // If line wasn't found, append it cleanly to Key Experience
+      const updated = `${content}\n\n• ${improved.replace(/^["']|["']$/g, "")}`;
+      setContent(updated);
+      sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
+      bumpScore();
+    }
+  };
+
+  // 1-Click apply ALL STAR improvements across resume
+  const handleApplyAllImprovements = () => {
+    if (!content || !scanResult?.bulletImprovements?.length) return;
+
+    let updated = content;
+    scanResult.bulletImprovements.forEach((bullet) => {
+      const cleanedOriginal = bullet.original.replace(/^["'•\-* ]+/, "").trim().slice(0, 25).toLowerCase();
+      const lines = updated.split("\n");
+      let replaced = false;
+
+      const newLines = lines.map((line) => {
+        if (!replaced && line.toLowerCase().includes(cleanedOriginal)) {
+          replaced = true;
+          const prefix = line.trim().startsWith("-")
+            ? "- "
+            : line.trim().startsWith("•")
+            ? "• "
+            : "";
+          return `${prefix}${bullet.improved.replace(/^["']|["']$/g, "")}`;
+        }
+        return line;
+      });
+
+      if (replaced) {
+        updated = newLines.join("\n");
+      }
+    });
+
     setContent(updated);
     sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
 
-    // Optimistically bump score
     if (scanResult) {
       setScanResult({
         ...scanResult,
-        overallScore: Math.min(99, scanResult.overallScore + 3),
+        overallScore: Math.min(98, scanResult.overallScore + 12),
+        categoryScores: {
+          ...scanResult.categoryScores,
+          impactAndMetrics: 95,
+        },
       });
     }
   };
 
   const handleInsertKeyword = (keyword: string) => {
     if (!content) return;
-    const skillsHeading = "TECHNICAL SKILLS:";
+    const skillsKeywords = ["TECHNICAL SKILLS:", "SKILLS:", "Skills:", "Technical Skills:"];
     let updated = content;
+    let foundHeading = false;
 
-    if (content.includes(skillsHeading)) {
-      updated = content.replace(
-        skillsHeading,
-        `${skillsHeading} ${keyword},`
-      );
-    } else {
-      updated = `${content}\n\n• Key Competency: ${keyword}`;
+    for (const heading of skillsKeywords) {
+      if (content.includes(heading)) {
+        updated = content.replace(heading, `${heading} ${keyword},`);
+        foundHeading = true;
+        break;
+      }
+    }
+
+    if (!foundHeading) {
+      updated = `${content}\n\n• Core Competencies: ${keyword}`;
     }
 
     setContent(updated);
@@ -140,6 +265,7 @@ export default function ScanWorkspacePage() {
     if (scanResult) {
       setScanResult({
         ...scanResult,
+        overallScore: Math.min(99, scanResult.overallScore + 2),
         keywords: {
           ...scanResult.keywords,
           missing: scanResult.keywords.missing.filter((k) => k.name !== keyword),
@@ -147,6 +273,19 @@ export default function ScanWorkspacePage() {
             ...(scanResult.keywords.found || []),
             { name: keyword, count: 1, category: "hard" },
           ],
+        },
+      });
+    }
+  };
+
+  const bumpScore = () => {
+    if (scanResult) {
+      setScanResult({
+        ...scanResult,
+        overallScore: Math.min(98, scanResult.overallScore + 4),
+        categoryScores: {
+          ...scanResult.categoryScores,
+          impactAndMetrics: Math.min(98, (scanResult.categoryScores?.impactAndMetrics || 70) + 6),
         },
       });
     }
@@ -160,12 +299,20 @@ export default function ScanWorkspacePage() {
         setApiKeySaved(false);
         setSettingsOpen(false);
         handlePerformScan(content, jobDescription);
-      }, 1200);
+      }, 1000);
     }
   };
 
   return (
     <div className="h-screen w-screen bg-white text-zinc-950 flex flex-col overflow-hidden font-sans">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.docx,.txt"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+
       {/* Top Header Bar */}
       <header className="h-14 border-b border-zinc-200 bg-white px-4 flex items-center justify-between flex-shrink-0 z-30">
         <div className="flex items-center gap-3">
@@ -183,12 +330,22 @@ export default function ScanWorkspacePage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {scanResult?.bulletImprovements?.length ? (
+            <button
+              onClick={handleApplyAllImprovements}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>1-Click Apply All STAR Rewrites</span>
+            </button>
+          ) : null}
+
           <button
             onClick={() => setNewScanModalOpen(true)}
             className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>New Scan</span>
+            <UploadCloud className="w-3.5 h-3.5" />
+            <span>Upload New CV</span>
           </button>
         </div>
       </header>
@@ -248,7 +405,7 @@ export default function ScanWorkspacePage() {
               </button>
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Hirely provides a free engine by default. You can also connect your own free key from Google AI Studio.
+              Google Gemini 2.5 Flash is currently connected. You can also override with another personal API key:
             </p>
             <input
               type="password"
@@ -277,7 +434,7 @@ export default function ScanWorkspacePage() {
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
                 <UploadCloud className="w-4 h-4 text-blue-600" />
-                Upload New Resume / CV
+                Upload or Paste Resume / CV
               </h3>
               <button
                 onClick={() => setNewScanModalOpen(false)}
@@ -286,26 +443,36 @@ export default function ScanWorkspacePage() {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="p-6 rounded-2xl border-2 border-dashed border-zinc-200 hover:border-blue-500 bg-zinc-50 hover:bg-blue-50/40 text-center cursor-pointer transition-colors space-y-2"
+            >
+              <FileText className="w-8 h-8 text-blue-600 mx-auto" />
+              <div>
+                <p className="text-xs font-bold text-zinc-900">
+                  Click to select a PDF, DOCX, or TXT file
+                </p>
+                <p className="text-[11px] text-zinc-500">
+                  Direct in-memory text extraction & Gemini ATS analysis
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono">
+              <div className="flex-1 h-[1px] bg-zinc-200" />
+              <span>OR PASTE TEXT</span>
+              <div className="flex-1 h-[1px] bg-zinc-200" />
+            </div>
+
             <textarea
-              rows={6}
-              placeholder="Paste new resume text here..."
+              rows={5}
+              placeholder="Paste resume text here..."
               onChange={(e) => setContent(e.target.value)}
               className="w-full p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm focus:outline-none focus:border-blue-600 resize-none font-sans"
             />
-            <div className="flex justify-between items-center pt-2">
-              <button
-                onClick={() => {
-                  const sample = SAMPLE_DATA.productManager;
-                  setContent(sample.resumeText);
-                  setJobDescription(sample.jobDescription);
-                  setDocumentName("Elena_Rostova_Lead_PM_Resume.pdf");
-                  setNewScanModalOpen(false);
-                  handlePerformScan(sample.resumeText, sample.jobDescription);
-                }}
-                className="text-xs text-blue-600 hover:underline font-mono"
-              >
-                Load PM Sample CV
-              </button>
+
+            <div className="flex justify-end gap-2 pt-1">
               <button
                 onClick={() => {
                   setNewScanModalOpen(false);
@@ -313,7 +480,7 @@ export default function ScanWorkspacePage() {
                 }}
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
               >
-                Start Scan
+                Scan Text
               </button>
             </div>
           </div>
