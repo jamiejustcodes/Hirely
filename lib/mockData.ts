@@ -15,6 +15,20 @@ export interface ATSKeyword {
   importance?: "critical" | "recommended";
 }
 
+export interface ATSIndustryBenchmark {
+  detectedProfession: string;
+  seniorityLevel: string;
+  industryPercentile: number;
+  topTierStandards: string[];
+  candidateComparison: Array<{
+    dimension: string;
+    candidateStatus: string;
+    topTierStandard: string;
+    status: "exceeds" | "meets" | "below";
+  }>;
+  adviceForTop1Percent: string;
+}
+
 export interface ATSScanResult {
   overallScore: number;
   grade: string;
@@ -40,6 +54,7 @@ export interface ATSScanResult {
     }>;
   };
   bulletImprovements: ATSBulletImprovement[];
+  industryBenchmark?: ATSIndustryBenchmark;
   actionPlan: string[];
 }
 

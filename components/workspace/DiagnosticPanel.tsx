@@ -11,12 +11,13 @@ import {
   AlertTriangle,
   ArrowRight,
   RotateCw,
-  Share2,
   Download,
   Plus,
-  Zap,
+  Award,
+  BarChart2,
+  Users,
 } from "lucide-react";
-import { ATSScanResult, ATSBulletImprovement } from "@/lib/mockData";
+import { ATSScanResult } from "@/lib/mockData";
 import { ScoreGauge } from "../ui/ScoreGauge";
 
 interface DiagnosticPanelProps {
@@ -36,18 +37,19 @@ export function DiagnosticPanel({
   onInsertKeyword,
   onExportReport,
 }: DiagnosticPanelProps) {
-  const [activeTab, setActiveTab] = useState<"score" | "keywords" | "rewrites" | "format">("score");
-  const [showSentenceHighlights, setShowSentenceHighlights] = useState(true);
+  const [activeTab, setActiveTab] = useState<
+    "score" | "benchmark" | "keywords" | "rewrites" | "format"
+  >("score");
 
   if (isLoading) {
     return (
-      <aside className="w-96 lg:w-[420px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center space-y-4 flex-shrink-0">
+      <aside className="w-96 lg:w-[440px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center space-y-4 flex-shrink-0">
         <div className="w-10 h-10 rounded-full border-3 border-zinc-200 border-t-blue-600 animate-spin" />
         <h4 className="text-sm font-bold text-zinc-950 font-sans">
-          Auditing CV against ATS Models...
+          Auditing CV against ATS & Industry Benchmarks...
         </h4>
         <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
-          Evaluating keyword frequency, single-column reading trees, and calculating Google XYZ metrics.
+          Comparing against top 1% resumes from your detected profession, extracting keywords, and calculating STAR score metrics via Gemini AI.
         </p>
       </aside>
     );
@@ -55,31 +57,50 @@ export function DiagnosticPanel({
 
   if (!result) {
     return (
-      <aside className="w-96 lg:w-[420px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center text-zinc-400 text-xs flex-shrink-0">
+      <aside className="w-96 lg:w-[440px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center text-zinc-400 text-xs flex-shrink-0">
         No scan results available.
       </aside>
     );
   }
 
+  const benchmark = result.industryBenchmark;
+
   return (
-    <aside className="w-96 lg:w-[440px] border-l border-zinc-200 bg-zinc-50/50 flex flex-col justify-between flex-shrink-0 overflow-hidden">
+    <aside className="w-96 lg:w-[450px] border-l border-zinc-200 bg-zinc-50/50 flex flex-col justify-between flex-shrink-0 overflow-hidden">
       {/* Top Header Tabs (GPTZero Style) */}
-      <div className="px-4 border-b border-zinc-200 bg-white flex items-center gap-1 overflow-x-auto text-xs font-semibold">
+      <div className="px-3 border-b border-zinc-200 bg-white flex items-center gap-1 overflow-x-auto text-xs font-semibold">
         <button
           onClick={() => setActiveTab("score")}
-          className={`py-3 px-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
             activeTab === "score"
               ? "border-blue-600 text-blue-600 font-bold"
               : "border-transparent text-zinc-500 hover:text-zinc-900"
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5" />
-          Basic Scan
+          Score
+        </button>
+
+        <button
+          onClick={() => setActiveTab("benchmark")}
+          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
+            activeTab === "benchmark"
+              ? "border-blue-600 text-blue-600 font-bold"
+              : "border-transparent text-zinc-500 hover:text-zinc-900"
+          }`}
+        >
+          <Award className="w-3.5 h-3.5 text-amber-500" />
+          Benchmark
+          {benchmark?.industryPercentile ? (
+            <span className="px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200">
+              Top {100 - benchmark.industryPercentile}%
+            </span>
+          ) : null}
         </button>
 
         <button
           onClick={() => setActiveTab("keywords")}
-          className={`py-3 px-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
             activeTab === "keywords"
               ? "border-blue-600 text-blue-600 font-bold"
               : "border-transparent text-zinc-500 hover:text-zinc-900"
@@ -96,19 +117,19 @@ export function DiagnosticPanel({
 
         <button
           onClick={() => setActiveTab("rewrites")}
-          className={`py-3 px-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
             activeTab === "rewrites"
               ? "border-blue-600 text-blue-600 font-bold"
               : "border-transparent text-zinc-500 hover:text-zinc-900"
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
-          STAR Rewriter
+          Rewrites
         </button>
 
         <button
           onClick={() => setActiveTab("format")}
-          className={`py-3 px-3 border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
             activeTab === "format"
               ? "border-blue-600 text-blue-600 font-bold"
               : "border-transparent text-zinc-500 hover:text-zinc-900"
@@ -121,19 +142,17 @@ export function DiagnosticPanel({
 
       {/* Main Assistant Body */}
       <div className="flex-1 p-5 overflow-y-auto space-y-5">
-        {/* Top Share / Export Bar */}
+        {/* Top Export Bar */}
         <div className="flex items-center justify-between text-xs pb-1">
           <span className="font-bold text-zinc-950 font-sans">
             ATS Diagnostic Assessment
           </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onExportReport}
-              className="px-2.5 py-1 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 flex items-center gap-1 font-mono text-[11px]"
-            >
-              <Download className="w-3 h-3" /> Export
-            </button>
-          </div>
+          <button
+            onClick={onExportReport}
+            className="px-2.5 py-1 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 flex items-center gap-1 font-mono text-[11px]"
+          >
+            <Download className="w-3 h-3" /> Export
+          </button>
         </div>
 
         {/* TAB 1: SCORE & OVERVIEW */}
@@ -153,7 +172,7 @@ export function DiagnosticPanel({
                     Recruiter Screening Match
                   </h4>
                   <p className="text-[11px] text-zinc-500 leading-relaxed">
-                    Estimated 88% probability of passing initial Workday & Taleo filters.
+                    Estimated {result.overallScore}% probability of passing initial Workday & Taleo filters.
                   </p>
                 </div>
               </div>
@@ -181,7 +200,32 @@ export function DiagnosticPanel({
               </div>
             </div>
 
-            {/* Ways to Improve This CV (GPTZero Accordion Style) */}
+            {/* Quick Link to Industry Benchmark */}
+            {benchmark && (
+              <div
+                onClick={() => setActiveTab("benchmark")}
+                className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 flex items-center justify-between gap-3 cursor-pointer hover:bg-amber-100/60 transition-colors shadow-2xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 font-bold">
+                    <Award className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase text-amber-700 block">
+                      Detected Profession Benchmark
+                    </span>
+                    <h5 className="text-xs font-bold text-zinc-900">
+                      {benchmark.detectedProfession}
+                    </h5>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-amber-800 font-mono">
+                  Top {100 - benchmark.industryPercentile}% &rarr;
+                </span>
+              </div>
+            )}
+
+            {/* Ways to Improve This CV */}
             <div className="space-y-2.5">
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block px-1">
                 Ways to Improve This CV
@@ -236,7 +280,114 @@ export function DiagnosticPanel({
           </div>
         )}
 
-        {/* TAB 2: KEYWORDS */}
+        {/* TAB 2: INDUSTRY BENCHMARK (NEW) */}
+        {activeTab === "benchmark" && (
+          <div className="space-y-4">
+            {benchmark ? (
+              <>
+                {/* Detected Role & Percentile Card */}
+                <div className="p-4 rounded-2xl bg-white border border-zinc-200 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5 text-amber-600" /> Industry Benchmark
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200 font-mono">
+                      {benchmark.seniorityLevel}
+                    </span>
+                  </div>
+
+                  <h4 className="text-sm font-bold text-zinc-950 font-sans">
+                    {benchmark.detectedProfession}
+                  </h4>
+
+                  <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-zinc-500">Peer Percentile Rank:</span>
+                      <span className="text-blue-700 font-bold">
+                        Top {100 - benchmark.industryPercentile}% of Applicants
+                      </span>
+                    </div>
+                    <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full"
+                        style={{ width: `${benchmark.industryPercentile}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Top 1% Industry Standards */}
+                <div className="p-4 rounded-2xl bg-white border border-zinc-200 shadow-xs space-y-2.5">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-600 block">
+                    Top 1% Standard Requirements for this Role
+                  </span>
+                  <ul className="space-y-2 text-xs text-zinc-700 font-sans">
+                    {benchmark.topTierStandards?.map((std, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span>{std}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Candidate vs Top 1% Comparison Matrix */}
+                <div className="space-y-2.5">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block px-1">
+                    Candidate vs Top 1% Standard Matrix
+                  </span>
+                  {benchmark.candidateComparison?.map((comp, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 rounded-2xl bg-white border border-zinc-200 space-y-2 text-xs shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-zinc-950 font-sans">
+                          {comp.dimension}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
+                            comp.status === "exceeds"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : comp.status === "meets"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-rose-50 text-rose-700 border border-rose-200"
+                          }`}
+                        >
+                          {comp.status}
+                        </span>
+                      </div>
+                      <div className="text-[11px] space-y-1">
+                        <p className="text-zinc-600">
+                          <strong>Your CV:</strong> {comp.candidateStatus}
+                        </p>
+                        <p className="text-zinc-800">
+                          <strong>Top 1% Baseline:</strong> {comp.topTierStandard}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Advice to reach Top 1% */}
+                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 text-xs space-y-1.5">
+                  <span className="font-mono font-bold text-blue-700 text-[10px] uppercase flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-blue-600" /> Advice to reach Top 1% Tier
+                  </span>
+                  <p className="text-zinc-800 leading-relaxed font-sans">
+                    {benchmark.adviceForTop1Percent}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8 text-xs text-zinc-400">
+                Industry benchmark data will populate on the next scan.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: KEYWORDS */}
         {activeTab === "keywords" && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -286,7 +437,7 @@ export function DiagnosticPanel({
           </div>
         )}
 
-        {/* TAB 3: STAR REWRITES */}
+        {/* TAB 4: STAR REWRITES */}
         {activeTab === "rewrites" && (
           <div className="space-y-4">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-600 block">
@@ -335,7 +486,7 @@ export function DiagnosticPanel({
           </div>
         )}
 
-        {/* TAB 4: FORMAT AUDIT */}
+        {/* TAB 5: FORMAT AUDIT */}
         {activeTab === "format" && (
           <div className="space-y-3">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">
