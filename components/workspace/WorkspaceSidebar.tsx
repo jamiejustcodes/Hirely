@@ -26,7 +26,7 @@ export function WorkspaceSidebar({
         {/* Brand Logo */}
         <Link
           href="/"
-          className="w-8 h-8 rounded-lg bg-[#1b806a] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:opacity-90 transition-opacity"
+          className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:bg-blue-700 transition-colors"
           title="Hirely Home"
         >
           H
@@ -35,7 +35,7 @@ export function WorkspaceSidebar({
         {/* Primary Action Button (+ New Scan) */}
         <button
           onClick={onNewScan}
-          className="w-8 h-8 rounded-lg bg-[#202124] hover:bg-black text-white flex items-center justify-center shadow-2xs transition-colors"
+          className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-2xs transition-colors"
           title="New Scan"
         >
           <Plus className="w-4 h-4" />
@@ -47,7 +47,7 @@ export function WorkspaceSidebar({
         <div className="flex flex-col items-center gap-3 w-full">
           <Link
             href="/"
-            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-blue-600 hover:bg-blue-50/50 flex items-center justify-center transition-colors"
             title="Landing Page"
           >
             <Home className="w-4 h-4" />
@@ -55,7 +55,7 @@ export function WorkspaceSidebar({
 
           <button
             onClick={onNewScan}
-            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-blue-600 hover:bg-blue-50/50 flex items-center justify-center transition-colors"
             title="Documents"
           >
             <FolderOpen className="w-4 h-4" />
@@ -63,7 +63,7 @@ export function WorkspaceSidebar({
 
           <button
             onClick={onOpenSettings}
-            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-blue-600 hover:bg-blue-50/50 flex items-center justify-center transition-colors"
             title="API Settings"
           >
             <Key className="w-4 h-4" />

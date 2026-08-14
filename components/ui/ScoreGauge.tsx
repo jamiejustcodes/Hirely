@@ -20,9 +20,9 @@ export function ScoreGauge({
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
-  // GPTZero styled emerald green ring
+  // Hirely light blue / cobalt theme
   const strokeColor =
-    score >= 80 ? "#1b806a" : score >= 60 ? "#d97706" : "#e11d48";
+    score >= 80 ? "#2563eb" : score >= 60 ? "#0284c7" : "#ef4444";
 
   return (
     <div className="flex flex-col items-center justify-center relative select-none">
@@ -33,7 +33,7 @@ export function ScoreGauge({
             cx={size / 2}
             cy={size / 2}
             r={radius}
-            stroke="#e5e7eb"
+            stroke="#e2e8f0"
             strokeWidth={strokeWidth}
             fill="transparent"
           />
@@ -53,7 +53,7 @@ export function ScoreGauge({
           />
         </svg>
 
-        {/* Center text score (GPTZero style) */}
+        {/* Center text score */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <motion.span
             initial={{ opacity: 0, scale: 0.8 }}

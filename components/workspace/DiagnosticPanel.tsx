@@ -13,7 +13,6 @@ import {
   ChevronDown,
   Lock,
   CheckCircle2,
-  AlertTriangle,
   RotateCw,
   Plus,
   Compass,
@@ -57,7 +56,7 @@ export function DiagnosticPanel({
   if (isLoading) {
     return (
       <aside className="w-96 lg:w-[460px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center space-y-4 flex-shrink-0">
-        <div className="w-9 h-9 rounded-full border-2 border-zinc-200 border-t-zinc-900 animate-spin" />
+        <div className="w-9 h-9 rounded-full border-2 border-zinc-200 border-t-blue-600 animate-spin" />
         <h4 className="text-sm font-semibold text-zinc-900 font-sans">
           Scanning resume against ATS filters...
         </h4>
@@ -82,17 +81,17 @@ export function DiagnosticPanel({
 
   return (
     <aside className="w-96 lg:w-[460px] border-l border-zinc-200 bg-white flex flex-col justify-between flex-shrink-0 overflow-hidden font-sans select-none">
-      {/* 1. Top Tab Bar (Exact GPTZero Style) */}
+      {/* 1. Top Tab Bar (Hirely Light Blue Theme) */}
       <div className="border-b border-zinc-200 bg-white px-2 flex items-center gap-1 overflow-x-auto text-xs">
         <button
           onClick={() => setActiveTab("basic")}
           className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "basic"
-              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <div className="w-3.5 h-3.5 rounded-full border-2 border-amber-500 border-t-transparent animate-spin-slow" />
+          <div className="w-3.5 h-3.5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin-slow" />
           <span>Basic Scan</span>
         </button>
 
@@ -100,11 +99,11 @@ export function DiagnosticPanel({
           onClick={() => setActiveTab("benchmark")}
           className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "benchmark"
-              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <Compass className="w-3.5 h-3.5 text-emerald-600" />
+          <Compass className="w-3.5 h-3.5 text-blue-500" />
           <span>Benchmark</span>
         </button>
 
@@ -112,11 +111,11 @@ export function DiagnosticPanel({
           onClick={() => setActiveTab("keywords")}
           className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "keywords"
-              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <Layers className="w-3.5 h-3.5 text-blue-600" />
+          <Layers className="w-3.5 h-3.5 text-indigo-500" />
           <span>Keywords</span>
         </button>
 
@@ -124,11 +123,11 @@ export function DiagnosticPanel({
           onClick={() => setActiveTab("rewrites")}
           className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "rewrites"
-              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <FileText className="w-3.5 h-3.5 text-rose-600" />
+          <FileText className="w-3.5 h-3.5 text-sky-500" />
           <span>STAR Rewrites</span>
         </button>
 
@@ -136,16 +135,16 @@ export function DiagnosticPanel({
           onClick={() => setActiveTab("format")}
           className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "format"
-              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
           <span>Format</span>
         </button>
       </div>
 
-      {/* Main Body Content (GPTZero Exact Layout) */}
+      {/* Main Body Content */}
       <div className="flex-1 p-4 lg:p-5 overflow-y-auto space-y-4">
         {/* Subheader: Title, Feedback & Share/Export */}
         <div className="flex items-center justify-between pb-1">
@@ -154,7 +153,7 @@ export function DiagnosticPanel({
             <div className="flex items-center gap-1 text-zinc-400">
               <button
                 onClick={() => setThumbsGiven(thumbsGiven === "up" ? null : "up")}
-                className={`p-1 rounded hover:text-zinc-700 ${thumbsGiven === "up" ? "text-emerald-600" : ""}`}
+                className={`p-1 rounded hover:text-zinc-700 ${thumbsGiven === "up" ? "text-blue-600" : ""}`}
               >
                 <ThumbsUp className="w-3.5 h-3.5" />
               </button>
@@ -188,15 +187,15 @@ export function DiagnosticPanel({
           </div>
         </div>
 
-        {/* TAB 1: BASIC SCAN (EXACT GPTZERO CARD LAYOUT) */}
+        {/* TAB 1: BASIC SCAN */}
         {activeTab === "basic" && (
           <div className="space-y-4">
-            {/* Notice Banner 1 (Amber GPTZero Notification) */}
+            {/* Notice Banner 1 (Light Blue/Sky Notice) */}
             {showNotice1 && benchmark && (
-              <div className="p-3.5 rounded-xl bg-[#fffbeb] border border-[#fef3c7] text-[#92400e] text-xs space-y-1.5 relative">
+              <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 text-blue-950 text-xs space-y-1.5 relative">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2 font-semibold text-zinc-900">
-                    <Info className="w-4 h-4 text-[#d97706] flex-shrink-0" />
+                    <Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
                     <span>Detected Profession: {benchmark.detectedProfession}</span>
                   </div>
                   <button
@@ -212,12 +211,12 @@ export function DiagnosticPanel({
               </div>
             )}
 
-            {/* Notice Banner 2 (Word Count Check) */}
+            {/* Notice Banner 2 */}
             {showNotice2 && (
-              <div className="p-3.5 rounded-xl bg-[#fffbeb] border border-[#fef3c7] text-[#92400e] text-xs space-y-1 relative">
+              <div className="p-3.5 rounded-xl bg-sky-50/60 border border-sky-100 text-sky-950 text-xs space-y-1 relative">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2 font-semibold text-zinc-900">
-                    <Info className="w-4 h-4 text-[#d97706] flex-shrink-0" />
+                    <Info className="w-4 h-4 text-sky-600 flex-shrink-0" />
                     <span>Gemini 3.5 Engine Active</span>
                   </div>
                   <button
@@ -233,7 +232,7 @@ export function DiagnosticPanel({
               </div>
             )}
 
-            {/* Main Score Assessment Card (The Core GPTZero Verdict UI) */}
+            {/* Main Score Assessment Card */}
             <div className="p-4 rounded-xl border border-zinc-200 bg-white space-y-4 shadow-2xs">
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
@@ -241,17 +240,17 @@ export function DiagnosticPanel({
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs text-zinc-700">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-blue-500 flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-blue-600 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />
                     </div>
                     <span className="font-semibold text-zinc-900">Hirely ATS Assessment</span>
-                    <span className="px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 text-[10px] font-mono border border-zinc-200">
+                    <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 text-[10px] font-mono border border-blue-200">
                       Model 3.5
                     </span>
                   </div>
                   <h4 className="text-xs text-zinc-800 leading-snug">
                     We are <strong>highly confident</strong> this resume is{" "}
-                    <span className="text-zinc-950 font-semibold underline decoration-[#1b806a] decoration-2 underline-offset-2">
+                    <span className="text-zinc-950 font-semibold underline decoration-blue-600 decoration-2 underline-offset-2">
                       {result.overallScore >= 80 ? "ATS Ready" : "Partially Optimized"}
                     </span>{" "}
                     <Info className="w-3 h-3 inline text-zinc-400" />
@@ -259,29 +258,29 @@ export function DiagnosticPanel({
                 </div>
               </div>
 
-              {/* Chance Pills (Exact GPTZero capsule pills) */}
+              {/* Chance Pills */}
               <div className="space-y-1.5 pt-1">
                 <span className="text-[11px] text-zinc-500 block">
                   Chance this entire resume is...
                 </span>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs">
+                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs hover:border-blue-300 transition-colors">
                     <span>Top 1%</span>
-                    <span className="font-semibold text-zinc-900">
+                    <span className="font-semibold text-blue-700">
                       {benchmark?.industryPercentile ? `${benchmark.industryPercentile}%` : "18%"}
                     </span>
                     <ChevronDown className="w-3 h-3 text-zinc-400" />
                   </div>
 
-                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs">
+                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs hover:border-blue-300 transition-colors">
                     <span>Interview Ready</span>
-                    <span className="font-semibold text-zinc-900">
+                    <span className="font-semibold text-blue-700">
                       {result.overallScore}%
                     </span>
                     <ChevronDown className="w-3 h-3 text-zinc-400" />
                   </div>
 
-                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs">
+                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs hover:border-blue-300 transition-colors">
                     <span>Needs Tuning</span>
                     <span className="font-semibold text-zinc-900">
                       {Math.max(0, 100 - result.overallScore)}%
@@ -292,13 +291,13 @@ export function DiagnosticPanel({
               </div>
             </div>
 
-            {/* Sentence Highlighting Action Box (GPTZero Box) */}
+            {/* Sentence Highlighting Action Box */}
             <div
               onClick={() => setActiveTab("rewrites")}
-              className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+              className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-blue-50/40 hover:border-blue-200 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
             >
               <div className="flex items-center gap-2.5 text-xs text-zinc-800 font-medium">
-                <FileText className="w-4 h-4 text-zinc-500" />
+                <FileText className="w-4 h-4 text-blue-600" />
                 <span>See sentence highlighting</span>
               </div>
               <ChevronRight className="w-4 h-4 text-zinc-400" />
@@ -313,12 +312,12 @@ export function DiagnosticPanel({
               {/* Action Row 1 */}
               <div
                 onClick={() => setActiveTab("rewrites")}
-                className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+                className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-blue-50/40 hover:border-blue-200 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
               >
                 <span className="text-xs text-zinc-800 font-medium">
                   Improve metric density & STAR achievements
                 </span>
-                <span className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500">
+                <span className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Lock className="w-3 h-3" />
                 </span>
               </div>
@@ -326,24 +325,24 @@ export function DiagnosticPanel({
               {/* Action Row 2 */}
               <div
                 onClick={() => setActiveTab("keywords")}
-                className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+                className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-blue-50/40 hover:border-blue-200 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
               >
                 <span className="text-xs text-zinc-800 font-medium">
                   Correct keyword gaps ({missingKeywords.length} missing)
                 </span>
-                <span className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500">
+                <span className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                   <Lock className="w-3 h-3" />
                 </span>
               </div>
 
-              {/* Featured Green CTA Banner (GPTZero Writing Feedback banner) */}
-              <div className="p-3.5 rounded-xl bg-[#e6f4ea] border border-[#ceead6] flex items-center justify-between gap-3">
+              {/* Featured Light Blue CTA Banner */}
+              <div className="p-3.5 rounded-xl bg-blue-50/90 border border-blue-200 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-[#ceead6] flex items-center justify-center text-[#137333] flex-shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 flex-shrink-0">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
-                    <h5 className="text-xs font-semibold text-[#137333]">
+                    <h5 className="text-xs font-semibold text-blue-900">
                       STAR feedback on your draft
                     </h5>
                     <p className="text-[11px] text-zinc-600">
@@ -353,14 +352,14 @@ export function DiagnosticPanel({
                 </div>
                 <button
                   onClick={onApplyAllImprovements}
-                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-900 text-xs font-medium border border-[#ceead6] shadow-2xs transition-colors flex-shrink-0"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-2xs transition-colors flex-shrink-0"
                 >
                   Apply All
                 </button>
               </div>
             </div>
 
-            {/* Guidance for Reviewers Accordion (GPTZero Style) */}
+            {/* Guidance for Reviewers Accordion */}
             <div className="pt-2">
               <button
                 onClick={() => setGuidanceOpen(!guidanceOpen)}
@@ -388,10 +387,10 @@ export function DiagnosticPanel({
               <>
                 <div className="p-4 rounded-xl border border-zinc-200 bg-white space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#1b806a] flex items-center gap-1">
+                    <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5" /> Industry Benchmark
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 text-[10px] font-medium border border-zinc-200">
+                    <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium border border-blue-200">
                       {benchmark.seniorityLevel}
                     </span>
                   </div>
@@ -403,13 +402,13 @@ export function DiagnosticPanel({
                   <div className="p-3 rounded-lg bg-zinc-50 border border-zinc-200/80 space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-zinc-600">Peer Percentile Rank:</span>
-                      <span className="text-[#1b806a] font-semibold">
+                      <span className="text-blue-600 font-semibold">
                         Top {100 - benchmark.industryPercentile}% of Applicants
                       </span>
                     </div>
                     <div className="w-full bg-zinc-200 h-1.5 rounded-full overflow-hidden">
                       <div
-                        className="bg-[#1b806a] h-full rounded-full"
+                        className="bg-blue-600 h-full rounded-full"
                         style={{ width: `${benchmark.industryPercentile}%` }}
                       />
                     </div>
@@ -424,7 +423,7 @@ export function DiagnosticPanel({
                   <ul className="space-y-2 text-xs text-zinc-700">
                     {benchmark.topTierStandards?.map((std, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#1b806a] flex-shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
                         <span>{std}</span>
                       </li>
                     ))}
@@ -494,7 +493,7 @@ export function DiagnosticPanel({
                     </div>
                     <button
                       onClick={() => onInsertKeyword?.(kw.name)}
-                      className="px-2 py-1 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-[11px] font-medium flex items-center gap-1 transition-colors"
+                      className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-medium flex items-center gap-1 transition-colors"
                     >
                       <Plus className="w-3 h-3" /> Add
                     </button>
@@ -504,17 +503,17 @@ export function DiagnosticPanel({
             </div>
 
             <div className="space-y-2 pt-2 border-t border-zinc-200">
-              <span className="text-xs font-semibold text-[#1b806a] block">
+              <span className="text-xs font-semibold text-blue-700 block">
                 Detected Matching Keywords
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {result.keywords?.found?.map((kw, i) => (
                   <span
                     key={i}
-                    className="px-2.5 py-1 rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 text-xs flex items-center gap-1.5"
+                    className="px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50/50 text-blue-900 text-xs flex items-center gap-1.5"
                   >
                     <span>{kw.name}</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">
+                    <span className="text-[10px] text-blue-600 font-mono">
                       {kw.count}x
                     </span>
                   </span>
@@ -533,7 +532,7 @@ export function DiagnosticPanel({
               </span>
               <button
                 onClick={onApplyAllImprovements}
-                className="px-2.5 py-1 rounded-lg bg-[#1b806a] hover:bg-[#156956] text-white text-xs font-medium transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-2xs"
               >
                 Apply All Rewrites
               </button>
@@ -546,7 +545,7 @@ export function DiagnosticPanel({
               >
                 <div className="flex items-center justify-between font-medium text-zinc-900">
                   <span>{bullet.section}</span>
-                  <span className="text-[#1b806a] font-semibold text-[11px]">
+                  <span className="text-blue-700 font-semibold text-[11px]">
                     +{bullet.scoreAfter - bullet.scoreBefore} pts
                   </span>
                 </div>
@@ -558,8 +557,8 @@ export function DiagnosticPanel({
                   {bullet.original}
                 </div>
 
-                <div className="p-2.5 rounded bg-emerald-50 text-zinc-900 text-xs">
-                  <span className="text-[10px] text-[#1b806a] font-semibold block mb-0.5">
+                <div className="p-2.5 rounded bg-blue-50/80 border border-blue-100 text-zinc-900 text-xs">
+                  <span className="text-[10px] text-blue-700 font-semibold block mb-0.5">
                     STAR REWRITE
                   </span>
                   {bullet.improved}
@@ -567,7 +566,7 @@ export function DiagnosticPanel({
 
                 <button
                   onClick={() => onApplyImprovement?.(bullet.original, bullet.improved)}
-                  className="w-full py-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-800 font-medium text-xs transition-colors"
+                  className="w-full py-1.5 rounded-lg border border-zinc-200 hover:bg-blue-50/50 hover:border-blue-200 text-zinc-800 font-medium text-xs transition-colors"
                 >
                   Apply to Document
                 </button>
@@ -590,7 +589,7 @@ export function DiagnosticPanel({
               >
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-zinc-900 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1b806a]" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
                     {issue.title}
                   </span>
                 </div>
@@ -603,10 +602,10 @@ export function DiagnosticPanel({
         )}
       </div>
 
-      {/* 3. Bottom Sticky Bar (Exact GPTZero Re-scan bar) */}
+      {/* 3. Bottom Sticky Bar */}
       <div className="p-3.5 border-t border-zinc-200 bg-white flex items-center justify-between gap-3">
         <div className="space-y-0.5">
-          <span className="inline-block px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 text-[10px] font-medium border border-zinc-200">
+          <span className="inline-block px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium border border-blue-200">
             Text up-to-date
           </span>
           <p className="text-[11px] text-zinc-500">
@@ -617,7 +616,7 @@ export function DiagnosticPanel({
         <button
           onClick={onRescan}
           disabled={isLoading}
-          className="px-6 py-2 rounded-xl bg-[#202124] hover:bg-zinc-900 text-white text-xs font-medium transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+          className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50"
         >
           <RotateCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
           <span>Re-scan</span>
