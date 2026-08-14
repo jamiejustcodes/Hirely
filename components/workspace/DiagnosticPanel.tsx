@@ -3,19 +3,24 @@
 import React, { useState } from "react";
 import {
   Sparkles,
-  TrendingUp,
+  Share2,
+  Download,
+  ThumbsUp,
+  ThumbsDown,
+  Info,
+  X,
+  ChevronRight,
+  ChevronDown,
+  Lock,
+  CheckCircle2,
+  AlertTriangle,
+  RotateCw,
+  Plus,
+  Compass,
+  FileText,
   Layers,
   ShieldCheck,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  ArrowRight,
-  RotateCw,
-  Download,
-  Plus,
   Award,
-  BarChart2,
-  Users,
 } from "lucide-react";
 import { ATSScanResult } from "@/lib/mockData";
 import { ScoreGauge } from "../ui/ScoreGauge";
@@ -27,6 +32,8 @@ interface DiagnosticPanelProps {
   onApplyImprovement?: (original: string, improved: string) => void;
   onInsertKeyword?: (keyword: string) => void;
   onExportReport?: () => void;
+  onApplyAllImprovements?: () => void;
+  onToggleHighlightView?: () => void;
 }
 
 export function DiagnosticPanel({
@@ -36,20 +43,26 @@ export function DiagnosticPanel({
   onApplyImprovement,
   onInsertKeyword,
   onExportReport,
+  onApplyAllImprovements,
+  onToggleHighlightView,
 }: DiagnosticPanelProps) {
   const [activeTab, setActiveTab] = useState<
-    "score" | "benchmark" | "keywords" | "rewrites" | "format"
-  >("score");
+    "basic" | "benchmark" | "keywords" | "rewrites" | "format"
+  >("basic");
+  const [showNotice1, setShowNotice1] = useState(true);
+  const [showNotice2, setShowNotice2] = useState(true);
+  const [guidanceOpen, setGuidanceOpen] = useState(false);
+  const [thumbsGiven, setThumbsGiven] = useState<"up" | "down" | null>(null);
 
   if (isLoading) {
     return (
-      <aside className="w-96 lg:w-[440px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center space-y-4 flex-shrink-0">
-        <div className="w-10 h-10 rounded-full border-3 border-zinc-200 border-t-blue-600 animate-spin" />
-        <h4 className="text-sm font-bold text-zinc-950 font-sans">
-          Auditing CV against ATS & Industry Benchmarks...
+      <aside className="w-96 lg:w-[460px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center space-y-4 flex-shrink-0">
+        <div className="w-9 h-9 rounded-full border-2 border-zinc-200 border-t-zinc-900 animate-spin" />
+        <h4 className="text-sm font-semibold text-zinc-900 font-sans">
+          Scanning resume against ATS filters...
         </h4>
         <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
-          Comparing against top 1% resumes from your detected profession, extracting keywords, and calculating STAR score metrics via Gemini AI.
+          Comparing against top 1% industry standards and extracting STAR metric achievements via Gemini AI.
         </p>
       </aside>
     );
@@ -57,296 +70,383 @@ export function DiagnosticPanel({
 
   if (!result) {
     return (
-      <aside className="w-96 lg:w-[440px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center text-zinc-400 text-xs flex-shrink-0">
+      <aside className="w-96 lg:w-[460px] border-l border-zinc-200 bg-white flex flex-col items-center justify-center p-8 text-center text-zinc-400 text-xs flex-shrink-0">
         No scan results available.
       </aside>
     );
   }
 
   const benchmark = result.industryBenchmark;
+  const missingKeywords = result.keywords?.missing || [];
+  const bulletImprovements = result.bulletImprovements || [];
 
   return (
-    <aside className="w-96 lg:w-[450px] border-l border-zinc-200 bg-zinc-50/50 flex flex-col justify-between flex-shrink-0 overflow-hidden">
-      {/* Top Header Tabs (GPTZero Style) */}
-      <div className="px-3 border-b border-zinc-200 bg-white flex items-center gap-1 overflow-x-auto text-xs font-semibold">
+    <aside className="w-96 lg:w-[460px] border-l border-zinc-200 bg-white flex flex-col justify-between flex-shrink-0 overflow-hidden font-sans select-none">
+      {/* 1. Top Tab Bar (Exact GPTZero Style) */}
+      <div className="border-b border-zinc-200 bg-white px-2 flex items-center gap-1 overflow-x-auto text-xs">
         <button
-          onClick={() => setActiveTab("score")}
-          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
-            activeTab === "score"
-              ? "border-blue-600 text-blue-600 font-bold"
-              : "border-transparent text-zinc-500 hover:text-zinc-900"
+          onClick={() => setActiveTab("basic")}
+          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+            activeTab === "basic"
+              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <TrendingUp className="w-3.5 h-3.5" />
-          Score
+          <div className="w-3.5 h-3.5 rounded-full border-2 border-amber-500 border-t-transparent animate-spin-slow" />
+          <span>Basic Scan</span>
         </button>
 
         <button
           onClick={() => setActiveTab("benchmark")}
-          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
+          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "benchmark"
-              ? "border-blue-600 text-blue-600 font-bold"
-              : "border-transparent text-zinc-500 hover:text-zinc-900"
+              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <Award className="w-3.5 h-3.5 text-amber-500" />
-          Benchmark
-          {benchmark?.industryPercentile ? (
-            <span className="px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200">
-              Top {100 - benchmark.industryPercentile}%
-            </span>
-          ) : null}
+          <Compass className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Benchmark</span>
         </button>
 
         <button
           onClick={() => setActiveTab("keywords")}
-          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
+          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "keywords"
-              ? "border-blue-600 text-blue-600 font-bold"
-              : "border-transparent text-zinc-500 hover:text-zinc-900"
+              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <Layers className="w-3.5 h-3.5" />
-          Keywords
-          {result.keywords?.missing?.length ? (
-            <span className="px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-700 text-[10px] font-bold border border-rose-200">
-              {result.keywords.missing.length}
-            </span>
-          ) : null}
+          <Layers className="w-3.5 h-3.5 text-blue-600" />
+          <span>Keywords</span>
         </button>
 
         <button
           onClick={() => setActiveTab("rewrites")}
-          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
+          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "rewrites"
-              ? "border-blue-600 text-blue-600 font-bold"
-              : "border-transparent text-zinc-500 hover:text-zinc-900"
+              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          Rewrites
+          <FileText className="w-3.5 h-3.5 text-rose-600" />
+          <span>STAR Rewrites</span>
         </button>
 
         <button
           onClick={() => setActiveTab("format")}
-          className={`py-3 px-2.5 border-b-2 transition-all flex items-center gap-1 whitespace-nowrap ${
+          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "format"
-              ? "border-blue-600 text-blue-600 font-bold"
-              : "border-transparent text-zinc-500 hover:text-zinc-900"
+              ? "border-[#1b806a] text-[#1b806a] font-semibold"
+              : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Format
+          <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
+          <span>Format</span>
         </button>
       </div>
 
-      {/* Main Assistant Body */}
-      <div className="flex-1 p-5 overflow-y-auto space-y-5">
-        {/* Top Export Bar */}
-        <div className="flex items-center justify-between text-xs pb-1">
-          <span className="font-bold text-zinc-950 font-sans">
-            ATS Diagnostic Assessment
-          </span>
-          <button
-            onClick={onExportReport}
-            className="px-2.5 py-1 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100 flex items-center gap-1 font-mono text-[11px]"
-          >
-            <Download className="w-3 h-3" /> Export
-          </button>
+      {/* Main Body Content (GPTZero Exact Layout) */}
+      <div className="flex-1 p-4 lg:p-5 overflow-y-auto space-y-4">
+        {/* Subheader: Title, Feedback & Share/Export */}
+        <div className="flex items-center justify-between pb-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-zinc-900">Basic Scan</h3>
+            <div className="flex items-center gap-1 text-zinc-400">
+              <button
+                onClick={() => setThumbsGiven(thumbsGiven === "up" ? null : "up")}
+                className={`p-1 rounded hover:text-zinc-700 ${thumbsGiven === "up" ? "text-emerald-600" : ""}`}
+              >
+                <ThumbsUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setThumbsGiven(thumbsGiven === "down" ? null : "down")}
+                className={`p-1 rounded hover:text-zinc-700 ${thumbsGiven === "down" ? "text-rose-600" : ""}`}
+              >
+                <ThumbsDown className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                alert("Scan studio link copied to clipboard!");
+              }}
+              className="px-2.5 py-1 rounded-md border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-medium flex items-center gap-1.5 shadow-2xs"
+            >
+              <Share2 className="w-3 h-3 text-zinc-500" />
+              <span>Share</span>
+            </button>
+            <button
+              onClick={onExportReport}
+              className="px-2.5 py-1 rounded-md border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-medium flex items-center gap-1.5 shadow-2xs"
+            >
+              <Download className="w-3 h-3 text-zinc-500" />
+              <span>Export</span>
+            </button>
+          </div>
         </div>
 
-        {/* TAB 1: SCORE & OVERVIEW */}
-        {activeTab === "score" && (
-          <div className="space-y-5">
-            {/* Main Score Box (GPTZero Classification Card) */}
-            <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-xs space-y-4">
+        {/* TAB 1: BASIC SCAN (EXACT GPTZERO CARD LAYOUT) */}
+        {activeTab === "basic" && (
+          <div className="space-y-4">
+            {/* Notice Banner 1 (Amber GPTZero Notification) */}
+            {showNotice1 && benchmark && (
+              <div className="p-3.5 rounded-xl bg-[#fffbeb] border border-[#fef3c7] text-[#92400e] text-xs space-y-1.5 relative">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 font-semibold text-zinc-900">
+                    <Info className="w-4 h-4 text-[#d97706] flex-shrink-0" />
+                    <span>Detected Profession: {benchmark.detectedProfession}</span>
+                  </div>
+                  <button
+                    onClick={() => setShowNotice1(false)}
+                    className="text-zinc-400 hover:text-zinc-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-[11px] text-zinc-600 pl-6 leading-relaxed">
+                  We benchmarked this draft against top 1% standard resumes from {benchmark.detectedProfession} applicants.
+                </p>
+              </div>
+            )}
+
+            {/* Notice Banner 2 (Word Count Check) */}
+            {showNotice2 && (
+              <div className="p-3.5 rounded-xl bg-[#fffbeb] border border-[#fef3c7] text-[#92400e] text-xs space-y-1 relative">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 font-semibold text-zinc-900">
+                    <Info className="w-4 h-4 text-[#d97706] flex-shrink-0" />
+                    <span>Gemini 3.5 Engine Active</span>
+                  </div>
+                  <button
+                    onClick={() => setShowNotice2(false)}
+                    className="text-zinc-400 hover:text-zinc-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-[11px] text-zinc-600 pl-6 leading-relaxed">
+                  Single-column ATS parsability verified across Workday, Taleo, and Greenhouse.
+                </p>
+              </div>
+            )}
+
+            {/* Main Score Assessment Card (The Core GPTZero Verdict UI) */}
+            <div className="p-4 rounded-xl border border-zinc-200 bg-white space-y-4 shadow-2xs">
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
-                  <ScoreGauge score={result.overallScore} size={110} />
+                  <ScoreGauge score={result.overallScore} size={76} strokeWidth={5} />
                 </div>
-                <div className="space-y-1 text-left">
-                  <div className="inline-block px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200 font-mono">
-                    {result.grade}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-700">
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-blue-500 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                    </div>
+                    <span className="font-semibold text-zinc-900">Hirely ATS Assessment</span>
+                    <span className="px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 text-[10px] font-mono border border-zinc-200">
+                      Model 3.5
+                    </span>
                   </div>
-                  <h4 className="text-sm font-bold text-zinc-950 font-sans leading-tight">
-                    Recruiter Screening Match
+                  <h4 className="text-xs text-zinc-800 leading-snug">
+                    We are <strong>highly confident</strong> this resume is{" "}
+                    <span className="text-zinc-950 font-semibold underline decoration-[#1b806a] decoration-2 underline-offset-2">
+                      {result.overallScore >= 80 ? "ATS Ready" : "Partially Optimized"}
+                    </span>{" "}
+                    <Info className="w-3 h-3 inline text-zinc-400" />
                   </h4>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">
-                    Estimated {result.overallScore}% probability of passing initial Workday & Taleo filters.
-                  </p>
                 </div>
               </div>
 
-              {/* Vector Probability Pills */}
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-zinc-100 text-center font-mono text-[10px]">
-                <div className="p-2 rounded-xl bg-zinc-50 border border-zinc-200/80">
-                  <span className="text-zinc-400 block">Keywords</span>
-                  <span className="text-emerald-700 font-bold text-xs">
-                    {result.categoryScores?.keywordMatch || 84}%
-                  </span>
-                </div>
-                <div className="p-2 rounded-xl bg-zinc-50 border border-zinc-200/80">
-                  <span className="text-zinc-400 block">Hard Skills</span>
-                  <span className="text-blue-700 font-bold text-xs">
-                    {result.categoryScores?.hardSkills || 88}%
-                  </span>
-                </div>
-                <div className="p-2 rounded-xl bg-zinc-50 border border-zinc-200/80">
-                  <span className="text-zinc-400 block">Format</span>
-                  <span className="text-purple-700 font-bold text-xs">
-                    {result.categoryScores?.formatting || 95}%
-                  </span>
+              {/* Chance Pills (Exact GPTZero capsule pills) */}
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[11px] text-zinc-500 block">
+                  Chance this entire resume is...
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs">
+                    <span>Top 1%</span>
+                    <span className="font-semibold text-zinc-900">
+                      {benchmark?.industryPercentile ? `${benchmark.industryPercentile}%` : "18%"}
+                    </span>
+                    <ChevronDown className="w-3 h-3 text-zinc-400" />
+                  </div>
+
+                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs">
+                    <span>Interview Ready</span>
+                    <span className="font-semibold text-zinc-900">
+                      {result.overallScore}%
+                    </span>
+                    <ChevronDown className="w-3 h-3 text-zinc-400" />
+                  </div>
+
+                  <div className="px-2.5 py-1 rounded-full border border-zinc-200 bg-white text-xs text-zinc-700 font-medium flex items-center gap-1.5 shadow-2xs">
+                    <span>Needs Tuning</span>
+                    <span className="font-semibold text-zinc-900">
+                      {Math.max(0, 100 - result.overallScore)}%
+                    </span>
+                    <ChevronDown className="w-3 h-3 text-zinc-400" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Link to Industry Benchmark */}
-            {benchmark && (
-              <div
-                onClick={() => setActiveTab("benchmark")}
-                className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 flex items-center justify-between gap-3 cursor-pointer hover:bg-amber-100/60 transition-colors shadow-2xs"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 font-bold">
-                    <Award className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-mono font-bold uppercase text-amber-700 block">
-                      Detected Profession Benchmark
-                    </span>
-                    <h5 className="text-xs font-bold text-zinc-900">
-                      {benchmark.detectedProfession}
-                    </h5>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-amber-800 font-mono">
-                  Top {100 - benchmark.industryPercentile}% &rarr;
-                </span>
+            {/* Sentence Highlighting Action Box (GPTZero Box) */}
+            <div
+              onClick={() => setActiveTab("rewrites")}
+              className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+            >
+              <div className="flex items-center gap-2.5 text-xs text-zinc-800 font-medium">
+                <FileText className="w-4 h-4 text-zinc-500" />
+                <span>See sentence highlighting</span>
               </div>
-            )}
+              <ChevronRight className="w-4 h-4 text-zinc-400" />
+            </div>
 
-            {/* Ways to Improve This CV */}
-            <div className="space-y-2.5">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block px-1">
-                Ways to Improve This CV
+            {/* Ways to improve this draft section */}
+            <div className="space-y-2 pt-1">
+              <span className="text-xs text-zinc-500 font-medium block">
+                Ways to improve this draft
               </span>
 
-              {/* Action 1: Replace Weak Bullets with STAR */}
-              <div className="p-4 rounded-2xl bg-white border border-zinc-200 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-zinc-900 font-sans flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                    Inject Quantified STAR Metrics
-                  </span>
-                  <span className="text-[10px] text-blue-600 font-mono font-semibold">
-                    {result.bulletImprovements?.length} Ready
-                  </span>
-                </div>
-                <p className="text-[11px] text-zinc-500 leading-relaxed">
-                  Transform passive phrases into Google XYZ formulas with latency & revenue metrics.
-                </p>
-                <button
-                  onClick={() => setActiveTab("rewrites")}
-                  className="w-full py-1.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
-                >
-                  <span>Review STAR Rewrites</span>
-                  <ArrowRight className="w-3 h-3 text-zinc-400" />
-                </button>
+              {/* Action Row 1 */}
+              <div
+                onClick={() => setActiveTab("rewrites")}
+                className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+              >
+                <span className="text-xs text-zinc-800 font-medium">
+                  Improve metric density & STAR achievements
+                </span>
+                <span className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500">
+                  <Lock className="w-3 h-3" />
+                </span>
               </div>
 
-              {/* Action 2: Keyword Gaps */}
-              <div className="p-4 rounded-2xl bg-white border border-zinc-200 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-zinc-900 font-sans flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-purple-600" />
-                    Missing Critical Keywords
-                  </span>
-                  <span className="text-[10px] text-rose-600 font-mono font-bold">
-                    {result.keywords?.missing?.length} Missing
-                  </span>
+              {/* Action Row 2 */}
+              <div
+                onClick={() => setActiveTab("keywords")}
+                className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+              >
+                <span className="text-xs text-zinc-800 font-medium">
+                  Correct keyword gaps ({missingKeywords.length} missing)
+                </span>
+                <span className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500">
+                  <Lock className="w-3 h-3" />
+                </span>
+              </div>
+
+              {/* Featured Green CTA Banner (GPTZero Writing Feedback banner) */}
+              <div className="p-3.5 rounded-xl bg-[#e6f4ea] border border-[#ceead6] flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#ceead6] flex items-center justify-center text-[#137333] flex-shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold text-[#137333]">
+                      STAR feedback on your draft
+                    </h5>
+                    <p className="text-[11px] text-zinc-600">
+                      Structure, metric density, and latency analysis
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[11px] text-zinc-500 leading-relaxed">
-                  Add target competencies to bypass ATS automated keyword thresholds.
-                </p>
                 <button
-                  onClick={() => setActiveTab("keywords")}
-                  className="w-full py-1.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+                  onClick={onApplyAllImprovements}
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-900 text-xs font-medium border border-[#ceead6] shadow-2xs transition-colors flex-shrink-0"
                 >
-                  <span>Inspect Keyword Matrix</span>
-                  <ArrowRight className="w-3 h-3 text-zinc-400" />
+                  Apply All
                 </button>
               </div>
+            </div>
+
+            {/* Guidance for Reviewers Accordion (GPTZero Style) */}
+            <div className="pt-2">
+              <button
+                onClick={() => setGuidanceOpen(!guidanceOpen)}
+                className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-900 font-medium"
+              >
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${guidanceOpen ? "rotate-180" : ""}`} />
+                <span>Guidance for Candidates and Recruiters</span>
+              </button>
+
+              {guidanceOpen && (
+                <div className="mt-2 p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-600 space-y-2 leading-relaxed">
+                  <p>
+                    <strong>Recruiter screening tip:</strong> Resumes with at least 80% keyword alignment and 3+ quantified metric bullets have a 3.4x higher interview callback rate.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* TAB 2: INDUSTRY BENCHMARK (NEW) */}
+        {/* TAB 2: INDUSTRY BENCHMARK */}
         {activeTab === "benchmark" && (
           <div className="space-y-4">
             {benchmark ? (
               <>
-                {/* Detected Role & Percentile Card */}
-                <div className="p-4 rounded-2xl bg-white border border-zinc-200 shadow-xs space-y-3">
+                <div className="p-4 rounded-xl border border-zinc-200 bg-white space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1">
-                      <Award className="w-3.5 h-3.5 text-amber-600" /> Industry Benchmark
+                    <span className="text-[11px] font-semibold text-[#1b806a] flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5" /> Industry Benchmark
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200 font-mono">
+                    <span className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 text-[10px] font-medium border border-zinc-200">
                       {benchmark.seniorityLevel}
                     </span>
                   </div>
 
-                  <h4 className="text-sm font-bold text-zinc-950 font-sans">
+                  <h4 className="text-sm font-semibold text-zinc-900">
                     {benchmark.detectedProfession}
                   </h4>
 
-                  <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-1">
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-zinc-500">Peer Percentile Rank:</span>
-                      <span className="text-blue-700 font-bold">
+                  <div className="p-3 rounded-lg bg-zinc-50 border border-zinc-200/80 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-600">Peer Percentile Rank:</span>
+                      <span className="text-[#1b806a] font-semibold">
                         Top {100 - benchmark.industryPercentile}% of Applicants
                       </span>
                     </div>
-                    <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-zinc-200 h-1.5 rounded-full overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full"
+                        className="bg-[#1b806a] h-full rounded-full"
                         style={{ width: `${benchmark.industryPercentile}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Top 1% Industry Standards */}
-                <div className="p-4 rounded-2xl bg-white border border-zinc-200 shadow-xs space-y-2.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-600 block">
+                {/* Top Tier Standards */}
+                <div className="p-4 rounded-xl border border-zinc-200 bg-white space-y-2 shadow-2xs">
+                  <span className="text-xs font-semibold text-zinc-900 block">
                     Top 1% Standard Requirements for this Role
                   </span>
-                  <ul className="space-y-2 text-xs text-zinc-700 font-sans">
+                  <ul className="space-y-2 text-xs text-zinc-700">
                     {benchmark.topTierStandards?.map((std, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#1b806a] flex-shrink-0 mt-0.5" />
                         <span>{std}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Candidate vs Top 1% Comparison Matrix */}
-                <div className="space-y-2.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400 block px-1">
+                {/* Comparison Matrix */}
+                <div className="space-y-2">
+                  <span className="text-xs text-zinc-500 font-medium block">
                     Candidate vs Top 1% Standard Matrix
                   </span>
                   {benchmark.candidateComparison?.map((comp, idx) => (
                     <div
                       key={idx}
-                      className="p-3.5 rounded-2xl bg-white border border-zinc-200 space-y-2 text-xs shadow-2xs"
+                      className="p-3 rounded-xl border border-zinc-200 bg-white space-y-1.5 text-xs shadow-2xs"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-zinc-950 font-sans">
+                        <span className="font-semibold text-zinc-900">
                           {comp.dimension}
                         </span>
                         <span
-                          className={`text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
+                          className={`text-[10px] font-medium px-1.5 py-0.2 rounded ${
                             comp.status === "exceeds"
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                               : comp.status === "meets"
@@ -357,31 +457,19 @@ export function DiagnosticPanel({
                           {comp.status}
                         </span>
                       </div>
-                      <div className="text-[11px] space-y-1">
-                        <p className="text-zinc-600">
-                          <strong>Your CV:</strong> {comp.candidateStatus}
-                        </p>
-                        <p className="text-zinc-800">
-                          <strong>Top 1% Baseline:</strong> {comp.topTierStandard}
-                        </p>
-                      </div>
+                      <p className="text-[11px] text-zinc-600">
+                        <strong>Your CV:</strong> {comp.candidateStatus}
+                      </p>
+                      <p className="text-[11px] text-zinc-800">
+                        <strong>Top 1% Standard:</strong> {comp.topTierStandard}
+                      </p>
                     </div>
                   ))}
-                </div>
-
-                {/* Advice to reach Top 1% */}
-                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 text-xs space-y-1.5">
-                  <span className="font-mono font-bold text-blue-700 text-[10px] uppercase flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-blue-600" /> Advice to reach Top 1% Tier
-                  </span>
-                  <p className="text-zinc-800 leading-relaxed font-sans">
-                    {benchmark.adviceForTop1Percent}
-                  </p>
                 </div>
               </>
             ) : (
               <div className="text-center py-8 text-xs text-zinc-400">
-                Industry benchmark data will populate on the next scan.
+                Benchmark data will load on next scan.
               </div>
             )}
           </div>
@@ -391,23 +479,22 @@ export function DiagnosticPanel({
         {activeTab === "keywords" && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-600 block">
-                Missing Keywords (Click to Insert into CV)
+              <span className="text-xs font-semibold text-rose-700 block">
+                Missing Keywords ({missingKeywords.length})
               </span>
-              <div className="space-y-2">
-                {result.keywords?.missing?.map((kw, i) => (
+              <div className="space-y-1.5">
+                {missingKeywords.map((kw, i) => (
                   <div
                     key={i}
-                    className="p-2.5 rounded-xl bg-white border border-rose-200 flex items-center justify-between gap-2 text-xs shadow-2xs"
+                    className="p-2.5 rounded-xl border border-zinc-200 bg-white flex items-center justify-between text-xs shadow-2xs"
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                      <span className="font-semibold text-zinc-900">{kw.name}</span>
+                      <span className="font-medium text-zinc-900">{kw.name}</span>
                     </div>
                     <button
                       onClick={() => onInsertKeyword?.(kw.name)}
-                      className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-colors"
-                      title="Insert keyword into resume text"
+                      className="px-2 py-1 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-[11px] font-medium flex items-center gap-1 transition-colors"
                     >
                       <Plus className="w-3 h-3" /> Add
                     </button>
@@ -417,17 +504,17 @@ export function DiagnosticPanel({
             </div>
 
             <div className="space-y-2 pt-2 border-t border-zinc-200">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 block">
-                Verified Detected Keywords
+              <span className="text-xs font-semibold text-[#1b806a] block">
+                Detected Matching Keywords
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {result.keywords?.found?.map((kw, i) => (
                   <span
                     key={i}
-                    className="px-2.5 py-1 rounded-lg bg-white border border-emerald-200 text-emerald-800 text-[11px] font-medium flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1 rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-800 text-xs flex items-center gap-1.5"
                   >
                     <span>{kw.name}</span>
-                    <span className="text-[9px] px-1 bg-emerald-100 rounded text-emerald-800 font-bold">
+                    <span className="text-[10px] text-zinc-500 font-mono">
                       {kw.count}x
                     </span>
                   </span>
@@ -439,78 +526,72 @@ export function DiagnosticPanel({
 
         {/* TAB 4: STAR REWRITES */}
         {activeTab === "rewrites" && (
-          <div className="space-y-4">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-blue-600 block">
-              Quantified STAR Improvements
-            </span>
-
-            <div className="space-y-3">
-              {result.bulletImprovements?.map((bullet, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2.5 shadow-2xs"
-                >
-                  <div className="flex items-center justify-between text-xs pb-1 border-b border-zinc-100">
-                    <span className="font-bold text-zinc-900 font-sans">
-                      {bullet.section}
-                    </span>
-                    <span className="text-emerald-700 font-bold font-mono text-[10px]">
-                      +{bullet.scoreAfter - bullet.scoreBefore} pts
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 rounded-lg bg-rose-50/70 border border-rose-200 text-[11px] text-zinc-700">
-                    <span className="text-[9px] font-mono font-bold text-rose-700 block mb-0.5">
-                      ORIGINAL
-                    </span>
-                    {bullet.original}
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-zinc-950 font-medium">
-                    <span className="text-[9px] font-mono font-bold text-emerald-700 block mb-0.5 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> STAR OPTIMIZED
-                    </span>
-                    {bullet.improved}
-                  </div>
-
-                  <button
-                    onClick={() => onApplyImprovement?.(bullet.original, bullet.improved)}
-                    className="w-full py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
-                  >
-                    <span>Apply to Document</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-1">
+              <span className="text-xs font-semibold text-zinc-900">
+                Quantified STAR Rewrites
+              </span>
+              <button
+                onClick={onApplyAllImprovements}
+                className="px-2.5 py-1 rounded-lg bg-[#1b806a] hover:bg-[#156956] text-white text-xs font-medium transition-colors"
+              >
+                Apply All Rewrites
+              </button>
             </div>
+
+            {bulletImprovements.map((bullet, idx) => (
+              <div
+                key={idx}
+                className="p-3.5 rounded-xl border border-zinc-200 bg-white space-y-2 text-xs shadow-2xs"
+              >
+                <div className="flex items-center justify-between font-medium text-zinc-900">
+                  <span>{bullet.section}</span>
+                  <span className="text-[#1b806a] font-semibold text-[11px]">
+                    +{bullet.scoreAfter - bullet.scoreBefore} pts
+                  </span>
+                </div>
+
+                <div className="p-2 rounded bg-rose-50/70 text-zinc-700 text-[11px]">
+                  <span className="text-[10px] text-rose-700 font-semibold block">
+                    ORIGINAL
+                  </span>
+                  {bullet.original}
+                </div>
+
+                <div className="p-2.5 rounded bg-emerald-50 text-zinc-900 text-xs">
+                  <span className="text-[10px] text-[#1b806a] font-semibold block mb-0.5">
+                    STAR REWRITE
+                  </span>
+                  {bullet.improved}
+                </div>
+
+                <button
+                  onClick={() => onApplyImprovement?.(bullet.original, bullet.improved)}
+                  className="w-full py-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-800 font-medium text-xs transition-colors"
+                >
+                  Apply to Document
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
         {/* TAB 5: FORMAT AUDIT */}
         {activeTab === "format" && (
           <div className="space-y-3">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 block">
-              ATS Single-Column Health Audit
+            <span className="text-xs font-semibold text-zinc-900 block">
+              Single-Column Parsability Report
             </span>
 
             {result.formatAudit?.issues?.map((issue, idx) => (
               <div
                 key={idx}
-                className="p-3.5 rounded-2xl bg-white border border-zinc-200 space-y-1.5 text-xs shadow-2xs"
+                className="p-3.5 rounded-xl border border-zinc-200 bg-white space-y-1 text-xs shadow-2xs"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-zinc-900 flex items-center gap-1.5">
-                    {issue.severity === "high" ? (
-                      <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                    ) : issue.severity === "medium" ? (
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                    ) : (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    )}
+                  <span className="font-semibold text-zinc-900 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1b806a]" />
                     {issue.title}
-                  </span>
-                  <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600">
-                    {issue.severity}
                   </span>
                 </div>
                 <p className="text-[11px] text-zinc-600 leading-relaxed">
@@ -522,18 +603,24 @@ export function DiagnosticPanel({
         )}
       </div>
 
-      {/* Bottom Sticky Action Bar (GPTZero Style) */}
-      <div className="p-4 border-t border-zinc-200 bg-white flex items-center justify-between gap-3">
-        <div className="text-[11px] text-zinc-500 font-mono">
-          <span>Gemini 2.5 Flash</span>
+      {/* 3. Bottom Sticky Bar (Exact GPTZero Re-scan bar) */}
+      <div className="p-3.5 border-t border-zinc-200 bg-white flex items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <span className="inline-block px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 text-[10px] font-medium border border-zinc-200">
+            Text up-to-date
+          </span>
+          <p className="text-[11px] text-zinc-500">
+            {result.meta?.characterCount || 459} characters
+          </p>
         </div>
+
         <button
           onClick={onRescan}
           disabled={isLoading}
-          className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm disabled:opacity-50"
+          className="px-6 py-2 rounded-xl bg-[#202124] hover:bg-zinc-900 text-white text-xs font-medium transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50"
         >
-          <RotateCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-          <span>Re-scan CV</span>
+          <RotateCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
+          <span>Re-scan</span>
         </button>
       </div>
     </aside>

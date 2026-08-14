@@ -55,6 +55,10 @@ export interface ATSScanResult {
   };
   bulletImprovements: ATSBulletImprovement[];
   industryBenchmark?: ATSIndustryBenchmark;
+  meta?: {
+    analyzedAt?: string;
+    characterCount?: number;
+  };
   actionPlan: string[];
 }
 

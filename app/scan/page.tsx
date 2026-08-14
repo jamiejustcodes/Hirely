@@ -97,8 +97,8 @@ export default function ScanWorkspacePage() {
       if (json.data?.overallScore >= 80) {
         try {
           confetti({
-            particleCount: 40,
-            spread: 50,
+            particleCount: 30,
+            spread: 45,
             origin: { y: 0.6 },
           });
         } catch (e) {}
@@ -155,7 +155,6 @@ export default function ScanWorkspacePage() {
   const handleApplyImprovement = (original: string, improved: string) => {
     if (!content) return;
 
-    // 1. Direct exact replacement
     if (content.includes(original)) {
       const updated = content.replace(original, improved);
       setContent(updated);
@@ -164,7 +163,6 @@ export default function ScanWorkspacePage() {
       return;
     }
 
-    // 2. Substring line-matching replacement (ignoring whitespace & quotes)
     const cleanedOriginal = original.replace(/^["'•\-* ]+/, "").trim().slice(0, 30).toLowerCase();
     const lines = content.split("\n");
     let replaced = false;
@@ -190,7 +188,6 @@ export default function ScanWorkspacePage() {
       sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
       bumpScore();
     } else {
-      // If line wasn't found, append it cleanly to Key Experience
       const updated = `${content}\n\n• ${improved.replace(/^["']|["']$/g, "")}`;
       setContent(updated);
       sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
@@ -313,39 +310,39 @@ export default function ScanWorkspacePage() {
         onChange={handleFileUpload}
       />
 
-      {/* Top Header Bar */}
-      <header className="h-14 border-b border-zinc-200 bg-white px-4 flex items-center justify-between flex-shrink-0 z-30">
+      {/* Top Header Bar (Clean Minimalist GPTZero Top Nav) */}
+      <header className="h-13 border-b border-zinc-200 bg-white px-4 flex items-center justify-between flex-shrink-0 z-30">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-2 text-zinc-600 hover:text-zinc-950 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-zinc-100 transition-colors"
+            className="flex items-center gap-1.5 text-zinc-600 hover:text-zinc-950 text-xs font-medium px-2.5 py-1 rounded-md hover:bg-zinc-100 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Home</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Home</span>
           </Link>
-          <div className="h-4 w-[1px] bg-zinc-200" />
-          <span className="text-sm font-bold tracking-tight text-zinc-950 lowercase">
-            hirely<span className="text-blue-600">.ai</span> / studio
+          <div className="h-3.5 w-[1px] bg-zinc-200" />
+          <span className="text-xs font-semibold text-zinc-900 tracking-tight">
+            hirely<span className="text-[#1b806a]">.ai</span> / studio
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {scanResult?.bulletImprovements?.length ? (
             <button
               onClick={handleApplyAllImprovements}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+              className="px-3 py-1 rounded-lg bg-[#1b806a] hover:bg-[#156956] text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>1-Click Apply All STAR Rewrites</span>
+              <Sparkles className="w-3 h-3" />
+              <span>Apply All Rewrites</span>
             </button>
           ) : null}
 
           <button
             onClick={() => setNewScanModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+            className="px-3 py-1 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-800 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
           >
-            <UploadCloud className="w-3.5 h-3.5" />
-            <span>Upload New CV</span>
+            <UploadCloud className="w-3.5 h-3.5 text-zinc-600" />
+            <span>Upload CV</span>
           </button>
         </div>
       </header>
@@ -377,6 +374,7 @@ export default function ScanWorkspacePage() {
           onRescan={() => handlePerformScan(content, jobDescription)}
           onApplyImprovement={handleApplyImprovement}
           onInsertKeyword={handleInsertKeyword}
+          onApplyAllImprovements={handleApplyAllImprovements}
           onExportReport={() => {
             const blob = new Blob([content], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
@@ -390,34 +388,34 @@ export default function ScanWorkspacePage() {
 
       {/* API Key Modal */}
       {settingsOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
-                <Key className="w-4 h-4 text-blue-600" />
-                Google Gemini API Key
+              <h3 className="font-semibold text-sm text-zinc-900 flex items-center gap-2">
+                <Key className="w-4 h-4 text-[#1b806a]" />
+                Gemini API Key
               </h3>
               <button
                 onClick={() => setSettingsOpen(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600"
+                className="p-1 rounded text-zinc-400 hover:text-zinc-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Google Gemini 2.5 Flash is currently connected. You can also override with another personal API key:
+              Google Gemini 3.5 Flash is currently connected. You can also override with another personal API key:
             </p>
             <input
               type="password"
               value={customApiKey}
               onChange={(e) => setCustomApiKey(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-sm focus:outline-none focus:border-blue-600"
+              className="w-full px-3 py-2 rounded-lg bg-zinc-50 border border-zinc-200 text-xs focus:outline-none focus:border-[#1b806a]"
             />
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={handleSaveApiKey}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-lg bg-[#1b806a] hover:bg-[#156956] text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
                 {apiKeySaved ? <Check className="w-3.5 h-3.5" /> : null}
                 <span>{apiKeySaved ? "Saved!" : "Save & Re-Scan"}</span>
@@ -429,16 +427,16 @@ export default function ScanWorkspacePage() {
 
       {/* New Scan Upload Modal */}
       {newScanModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-2xl p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
-                <UploadCloud className="w-4 h-4 text-blue-600" />
+              <h3 className="font-semibold text-sm text-zinc-900 flex items-center gap-2">
+                <UploadCloud className="w-4 h-4 text-[#1b806a]" />
                 Upload or Paste Resume / CV
               </h3>
               <button
                 onClick={() => setNewScanModalOpen(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600"
+                className="p-1 rounded text-zinc-400 hover:text-zinc-600"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -446,11 +444,11 @@ export default function ScanWorkspacePage() {
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="p-6 rounded-2xl border-2 border-dashed border-zinc-200 hover:border-blue-500 bg-zinc-50 hover:bg-blue-50/40 text-center cursor-pointer transition-colors space-y-2"
+              className="p-6 rounded-xl border-2 border-dashed border-zinc-200 hover:border-[#1b806a] bg-zinc-50 hover:bg-[#f0fdf4] text-center cursor-pointer transition-colors space-y-2"
             >
-              <FileText className="w-8 h-8 text-blue-600 mx-auto" />
+              <FileText className="w-8 h-8 text-[#1b806a] mx-auto" />
               <div>
-                <p className="text-xs font-bold text-zinc-900">
+                <p className="text-xs font-semibold text-zinc-900">
                   Click to select a PDF, DOCX, or TXT file
                 </p>
                 <p className="text-[11px] text-zinc-500">
@@ -459,9 +457,9 @@ export default function ScanWorkspacePage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono">
+            <div className="flex items-center gap-2 text-zinc-400 text-xs">
               <div className="flex-1 h-[1px] bg-zinc-200" />
-              <span>OR PASTE TEXT</span>
+              <span className="text-[10px]">OR PASTE TEXT</span>
               <div className="flex-1 h-[1px] bg-zinc-200" />
             </div>
 
@@ -469,7 +467,7 @@ export default function ScanWorkspacePage() {
               rows={5}
               placeholder="Paste resume text here..."
               onChange={(e) => setContent(e.target.value)}
-              className="w-full p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm focus:outline-none focus:border-blue-600 resize-none font-sans"
+              className="w-full p-3 rounded-lg bg-zinc-50 border border-zinc-200 text-xs focus:outline-none focus:border-[#1b806a] resize-none font-sans"
             />
 
             <div className="flex justify-end gap-2 pt-1">
@@ -478,7 +476,7 @@ export default function ScanWorkspacePage() {
                   setNewScanModalOpen(false);
                   handlePerformScan(content, jobDescription);
                 }}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
+                className="px-4 py-1.5 rounded-lg bg-[#202124] hover:bg-black text-white text-xs font-medium transition-colors"
               >
                 Scan Text
               </button>

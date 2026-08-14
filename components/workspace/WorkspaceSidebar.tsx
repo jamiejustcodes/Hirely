@@ -4,10 +4,8 @@ import React from "react";
 import Link from "next/link";
 import {
   Plus,
-  FileText,
   Key,
   Home,
-  ShieldCheck,
   FolderOpen,
   HelpCircle,
 } from "lucide-react";
@@ -23,12 +21,12 @@ export function WorkspaceSidebar({
   onOpenSettings,
 }: WorkspaceSidebarProps) {
   return (
-    <aside className="w-16 border-r border-zinc-200 bg-white flex flex-col items-center py-4 justify-between flex-shrink-0 z-20">
-      <div className="flex flex-col items-center gap-6 w-full">
+    <aside className="w-14 border-r border-zinc-200 bg-white flex flex-col items-center py-3.5 justify-between flex-shrink-0 z-20 select-none">
+      <div className="flex flex-col items-center gap-4 w-full">
         {/* Brand Logo */}
         <Link
           href="/"
-          className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm hover:scale-105 transition-transform"
+          className="w-8 h-8 rounded-lg bg-[#1b806a] text-white flex items-center justify-center font-bold text-sm shadow-2xs hover:opacity-90 transition-opacity"
           title="Hirely Home"
         >
           H
@@ -37,49 +35,49 @@ export function WorkspaceSidebar({
         {/* Primary Action Button (+ New Scan) */}
         <button
           onClick={onNewScan}
-          className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex flex-col items-center justify-center gap-0.5 shadow-sm transition-all"
-          title="New CV Scan"
+          className="w-8 h-8 rounded-lg bg-[#202124] hover:bg-black text-white flex items-center justify-center shadow-2xs transition-colors"
+          title="New Scan"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
         </button>
 
-        <div className="w-8 h-[1px] bg-zinc-200" />
+        <div className="w-6 h-[1px] bg-zinc-200" />
 
         {/* Navigation Action Icons */}
-        <div className="flex flex-col items-center gap-4 w-full">
+        <div className="flex flex-col items-center gap-3 w-full">
           <Link
             href="/"
-            className="w-10 h-10 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
             title="Landing Page"
           >
-            <Home className="w-5 h-5" />
+            <Home className="w-4 h-4" />
           </Link>
 
           <button
             onClick={onNewScan}
-            className="w-10 h-10 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
             title="Documents"
           >
-            <FolderOpen className="w-5 h-5" />
+            <FolderOpen className="w-4 h-4" />
           </button>
 
           <button
             onClick={onOpenSettings}
-            className="w-10 h-10 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
-            title="Gemini API Key Settings"
+            className="w-8 h-8 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+            title="API Settings"
           >
-            <Key className="w-5 h-5" />
+            <Key className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-2">
         <a
           href="/#faq"
-          className="w-10 h-10 rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 flex items-center justify-center transition-colors"
           title="Help & FAQ"
         >
-          <HelpCircle className="w-5 h-5" />
+          <HelpCircle className="w-4 h-4" />
         </a>
       </div>
     </aside>
