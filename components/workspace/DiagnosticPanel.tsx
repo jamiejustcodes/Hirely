@@ -23,8 +23,10 @@ import {
   FileDown,
   Printer,
   FileCode,
+  PlusCircle,
+  FolderPlus,
 } from "lucide-react";
-import { ATSScanResult } from "@/lib/mockData";
+import { ATSScanResult, ATSContentAddition } from "@/lib/mockData";
 import { ScoreGauge } from "../ui/ScoreGauge";
 import { exportToPrintablePDF, exportToWordDoc, exportATSAuditReport } from "@/lib/utils";
 
@@ -34,6 +36,7 @@ interface DiagnosticPanelProps {
   onRescan: () => void;
   onApplyImprovement?: (original: string, improved: string) => void;
   onInsertKeyword?: (keyword: string) => void;
+  onInsertAddition?: (addition: ATSContentAddition) => void;
   onExportReport?: () => void;
   onApplyAllImprovements?: () => void;
   onToggleHighlightView?: () => void;
@@ -45,7 +48,7 @@ const SCAN_STEPS = [
   "Step 1/4: Ingesting single-column text AST...",
   "Step 2/4: Cross-referencing 500+ ATS skill ontologies...",
   "Step 3/4: Benchmarking against Top 1% candidate profiles...",
-  "Step 4/4: Generating Google XYZ / STAR metric rewrites...",
+  "Step 4/4: Analyzing missing role sections & executive rewrites...",
 ];
 
 export function DiagnosticPanel({
@@ -54,6 +57,7 @@ export function DiagnosticPanel({
   onRescan,
   onApplyImprovement,
   onInsertKeyword,
+  onInsertAddition,
   onExportReport,
   onApplyAllImprovements,
   onToggleHighlightView,
@@ -61,7 +65,7 @@ export function DiagnosticPanel({
   documentName = "My_Resume.pdf",
 }: DiagnosticPanelProps) {
   const [activeTab, setActiveTab] = useState<
-    "basic" | "benchmark" | "keywords" | "rewrites" | "format"
+    "basic" | "benchmark" | "keywords" | "rewrites" | "additions" | "format"
   >("basic");
   const [showNotice1, setShowNotice1] = useState(true);
   const [showNotice2, setShowNotice2] = useState(true);
@@ -117,6 +121,7 @@ export function DiagnosticPanel({
   const benchmark = result.industryBenchmark;
   const missingKeywords = result.keywords?.missing || [];
   const bulletImprovements = result.bulletImprovements || [];
+  const recommendedAdditions = result.recommendedAdditions || [];
 
   const handleExportPDF = () => {
     setExportMenuOpen(false);
@@ -152,7 +157,7 @@ export function DiagnosticPanel({
       <div className="border-b border-zinc-200 bg-white px-2 flex items-center gap-1 overflow-x-auto text-xs">
         <button
           onClick={() => setActiveTab("basic")}
-          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "basic"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -163,20 +168,42 @@ export function DiagnosticPanel({
         </button>
 
         <button
-          onClick={() => setActiveTab("benchmark")}
-          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === "benchmark"
+          onClick={() => setActiveTab("additions")}
+          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+            activeTab === "additions"
+              ? "border-purple-600 text-purple-600 font-semibold"
+              : "border-transparent text-zinc-600 hover:text-zinc-900"
+          }`}
+        >
+          <PlusCircle className="w-3.5 h-3.5 text-purple-600" />
+          <span>Role Gaps</span>
+          {recommendedAdditions.length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold border border-purple-200">
+              {recommendedAdditions.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("rewrites")}
+          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+            activeTab === "rewrites"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <Compass className="w-3.5 h-3.5 text-blue-500" />
-          <span>Benchmark</span>
+          <FileText className="w-3.5 h-3.5 text-sky-500" />
+          <span>Rewrites</span>
+          {bulletImprovements.length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">
+              {bulletImprovements.length}
+            </span>
+          )}
         </button>
 
         <button
           onClick={() => setActiveTab("keywords")}
-          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "keywords"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -192,25 +219,20 @@ export function DiagnosticPanel({
         </button>
 
         <button
-          onClick={() => setActiveTab("rewrites")}
-          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === "rewrites"
+          onClick={() => setActiveTab("benchmark")}
+          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+            activeTab === "benchmark"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <FileText className="w-3.5 h-3.5 text-sky-500" />
-          <span>STAR Rewrites</span>
-          {bulletImprovements.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">
-              {bulletImprovements.length}
-            </span>
-          )}
+          <Compass className="w-3.5 h-3.5 text-blue-500" />
+          <span>Benchmark</span>
         </button>
 
         <button
           onClick={() => setActiveTab("format")}
-          className={`py-3 px-3 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === "format"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -226,7 +248,14 @@ export function DiagnosticPanel({
         {/* Subheader: Title, Feedback & Share/Export Dropdown */}
         <div className="flex items-center justify-between pb-1 relative">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-zinc-900">Basic Scan</h3>
+            <h3 className="text-sm font-semibold text-zinc-900">
+              {activeTab === "basic" && "Basic Scan"}
+              {activeTab === "additions" && "Role Gaps & Suggested Additions"}
+              {activeTab === "rewrites" && "Executive Bullet Rewrites"}
+              {activeTab === "keywords" && "ATS Keyword Match"}
+              {activeTab === "benchmark" && "Top 1% Role Benchmark"}
+              {activeTab === "format" && "Format & Parsability Audit"}
+            </h3>
             <div className="flex items-center gap-1 text-zinc-400">
               <button
                 onClick={() => setThumbsGiven(thumbsGiven === "up" ? null : "up")}
@@ -348,24 +377,24 @@ export function DiagnosticPanel({
               </div>
             )}
 
-            {/* Notice Banner 2 */}
-            {showNotice2 && (
-              <div className="p-3.5 rounded-xl bg-sky-50/60 border border-sky-100 text-sky-950 text-xs space-y-1 relative">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 font-semibold text-zinc-900">
-                    <Info className="w-4 h-4 text-sky-600 flex-shrink-0" />
-                    <span>Gemini 2.5 Engine Active</span>
+            {/* Role Additions Alert */}
+            {recommendedAdditions.length > 0 && (
+              <div
+                onClick={() => setActiveTab("additions")}
+                className="p-3 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <PlusCircle className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-purple-950">
+                      Missing {recommendedAdditions[0].title}
+                    </p>
+                    <span className="text-[11px] text-purple-700">
+                      Click to review & insert missing role sections (+{recommendedAdditions.reduce((acc, a) => acc + (a.impactPoints || 10), 0)} pts)
+                    </span>
                   </div>
-                  <button
-                    onClick={() => setShowNotice2(false)}
-                    className="text-zinc-400 hover:text-zinc-600"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
                 </div>
-                <p className="text-[11px] text-zinc-600 pl-6 leading-relaxed">
-                  Single-column ATS parsability verified across Workday, Taleo, and Greenhouse.
-                </p>
+                <ChevronRight className="w-4 h-4 text-purple-400 flex-shrink-0" />
               </div>
             )}
 
@@ -382,7 +411,7 @@ export function DiagnosticPanel({
                     </div>
                     <span className="font-semibold text-zinc-900">Hirely ATS Assessment</span>
                     <span className="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 text-[10px] font-mono border border-blue-200">
-                      Model 2.5
+                      Live AI Engine
                     </span>
                   </div>
                   <h4 className="text-xs text-zinc-800 leading-snug">
@@ -450,6 +479,21 @@ export function DiagnosticPanel({
                 Ways to improve this draft
               </span>
 
+              {/* Action Row: Missing Additions */}
+              {recommendedAdditions.length > 0 && (
+                <div
+                  onClick={() => setActiveTab("additions")}
+                  className="p-3 rounded-xl border border-purple-200 bg-purple-50/40 hover:bg-purple-50 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
+                >
+                  <span className="text-xs text-purple-950 font-medium">
+                    Add missing role sections ({recommendedAdditions.length} recommended)
+                  </span>
+                  <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">
+                    +{recommendedAdditions[0].impactPoints}
+                  </span>
+                </div>
+              )}
+
               {/* Action Row 1: Bullet Rewrites */}
               {bulletImprovements.length > 0 ? (
                 <div
@@ -457,7 +501,7 @@ export function DiagnosticPanel({
                   className="p-3 rounded-xl border border-zinc-200 bg-white hover:bg-blue-50/40 hover:border-blue-200 flex items-center justify-between cursor-pointer transition-colors shadow-2xs"
                 >
                   <span className="text-xs text-zinc-800 font-medium">
-                    Improve metric density ({bulletImprovements.length} bullets remaining)
+                    Upgrade action verbs & clarity ({bulletImprovements.length} bullets)
                   </span>
                   <span className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                     <Lock className="w-3 h-3" />
@@ -467,7 +511,7 @@ export function DiagnosticPanel({
                 <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between text-xs text-emerald-800 font-medium shadow-2xs">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    All STAR metric rewrites applied
+                    All executive rewrites applied
                   </span>
                 </div>
               )}
@@ -493,55 +537,225 @@ export function DiagnosticPanel({
                   </span>
                 </div>
               )}
-
-              {/* Featured Light Blue CTA Banner */}
-              {bulletImprovements.length > 0 && (
-                <div className="p-3.5 rounded-xl bg-blue-50/90 border border-blue-200 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 flex-shrink-0">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h5 className="text-xs font-semibold text-blue-900">
-                        STAR feedback on your draft
-                      </h5>
-                      <p className="text-[11px] text-zinc-600">
-                        Structure, metric density, and latency analysis
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={onApplyAllImprovements}
-                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-2xs transition-colors flex-shrink-0"
-                  >
-                    Apply All
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Guidance for Reviewers Accordion */}
-            <div className="pt-2">
-              <button
-                onClick={() => setGuidanceOpen(!guidanceOpen)}
-                className="flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-900 font-medium"
-              >
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${guidanceOpen ? "rotate-180" : ""}`} />
-                <span>Guidance for Candidates and Recruiters</span>
-              </button>
-
-              {guidanceOpen && (
-                <div className="mt-2 p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-600 space-y-2 leading-relaxed">
-                  <p>
-                    <strong>Recruiter screening tip:</strong> Resumes with at least 80% keyword alignment and 3+ quantified metric bullets have a 3.4x higher interview callback rate.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         )}
 
-        {/* TAB 2: INDUSTRY BENCHMARK */}
+        {/* TAB 2: ROLE GAPS & RECOMMENDED ADDITIONS */}
+        {activeTab === "additions" && (
+          <div className="space-y-3">
+            {recommendedAdditions.length === 0 ? (
+              <div className="p-6 rounded-xl border border-zinc-200 bg-white text-center space-y-2 shadow-2xs">
+                <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <h5 className="text-xs font-semibold text-zinc-900">
+                  All Essential Role Content Present!
+                </h5>
+                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                  Your CV includes all essential technical tools, core competency clusters, and section structures standard for {benchmark?.detectedProfession || "this role"}.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between pb-1">
+                  <div>
+                    <span className="text-xs font-semibold text-zinc-900 block">
+                      Missing Content & Sections ({recommendedAdditions.length})
+                    </span>
+                    <span className="text-[11px] text-zinc-500">
+                      Standard industry sections missing from your draft
+                    </span>
+                  </div>
+                </div>
+
+                {recommendedAdditions.map((addition, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-xl border border-purple-100 bg-white space-y-2.5 text-xs shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-semibold text-[10px] uppercase tracking-wider border border-purple-200">
+                        {addition.category === "missing_tools"
+                          ? "Technical Tools Gap"
+                          : addition.category === "missing_section"
+                          ? "Missing Section"
+                          : addition.category === "missing_scope"
+                          ? "Responsibility Gap"
+                          : "Certification Gap"}
+                      </span>
+                      <span className="text-purple-700 font-bold text-[11px]">
+                        +{addition.impactPoints || 12} pts
+                      </span>
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-zinc-900 text-xs">
+                        {addition.title}
+                      </h5>
+                      <p className="text-[11px] text-zinc-600 leading-relaxed mt-0.5">
+                        {addition.whyNeeded}
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1 font-mono text-[11px] text-zinc-800">
+                      <span className="text-[10px] font-bold text-zinc-500 block uppercase">
+                        Suggested Content:
+                      </span>
+                      <div className="font-bold text-zinc-900">{addition.suggestedHeading}</div>
+                      <div className="whitespace-pre-line text-zinc-700 font-sans text-xs">
+                        {addition.suggestedContent}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onInsertAddition?.(addition)}
+                      className="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Insert into CV (+{addition.impactPoints || 12} pts)</span>
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: EXECUTIVE BULLET REWRITES */}
+        {activeTab === "rewrites" && (
+          <div className="space-y-3">
+            {bulletImprovements.length === 0 ? (
+              <div className="p-6 rounded-xl border border-zinc-200 bg-white text-center space-y-2 shadow-2xs">
+                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <h5 className="text-xs font-semibold text-zinc-900">
+                  All Rewrites Applied!
+                </h5>
+                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto leading-relaxed">
+                  All weak experience bullets have been updated with executive action verbs and streamlined structure.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between pb-1">
+                  <span className="text-xs font-semibold text-zinc-900">
+                    Executive Action Rewrites ({bulletImprovements.length})
+                  </span>
+                  <button
+                    onClick={onApplyAllImprovements}
+                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-2xs"
+                  >
+                    Apply All Rewrites
+                  </button>
+                </div>
+
+                {bulletImprovements.map((bullet, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl border border-zinc-200 bg-white space-y-2 text-xs shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between font-medium text-zinc-900">
+                      <span>{bullet.section}</span>
+                      <span className="text-blue-700 font-semibold text-[11px]">
+                        +{bullet.scoreAfter - bullet.scoreBefore} pts
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded bg-rose-50/70 text-zinc-700 text-[11px]">
+                      <span className="text-[10px] text-rose-700 font-semibold block">
+                        ORIGINAL (PASSIVE)
+                      </span>
+                      {bullet.original}
+                    </div>
+
+                    <div className="p-2.5 rounded bg-blue-50/80 border border-blue-100 text-zinc-900 text-xs">
+                      <span className="text-[10px] text-blue-700 font-semibold block mb-0.5">
+                        EXECUTIVE REWRITE
+                      </span>
+                      {bullet.improved}
+                    </div>
+
+                    <p className="text-[11px] text-zinc-500 italic">
+                      {bullet.explanation}
+                    </p>
+
+                    <button
+                      onClick={() => onApplyImprovement?.(bullet.original, bullet.improved)}
+                      className="w-full py-1.5 rounded-lg border border-zinc-200 hover:bg-blue-50/50 hover:border-blue-200 text-zinc-800 font-medium text-xs transition-colors"
+                    >
+                      Apply to Document
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: KEYWORDS */}
+        {activeTab === "keywords" && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-rose-700 block">
+                Missing Keywords ({missingKeywords.length})
+              </span>
+              {missingKeywords.length === 0 ? (
+                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 text-center space-y-1">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 mx-auto" />
+                  <p className="text-xs font-semibold text-emerald-900">
+                    All Critical Keywords Added!
+                  </p>
+                  <p className="text-[11px] text-zinc-500">
+                    Your skills section matches target ATS keywords.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {missingKeywords.map((kw, i) => (
+                    <div
+                      key={i}
+                      className="p-2.5 rounded-xl border border-zinc-200 bg-white flex items-center justify-between text-xs shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        <span className="font-medium text-zinc-900">{kw.name}</span>
+                      </div>
+                      <button
+                        onClick={() => onInsertKeyword?.(kw.name)}
+                        className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-medium flex items-center gap-1 transition-colors"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-zinc-200">
+              <span className="text-xs font-semibold text-blue-700 block">
+                Detected Matching Keywords
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {result.keywords?.found?.map((kw, i) => (
+                  <span
+                    key={i}
+                    className="px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50/50 text-blue-900 text-xs flex items-center gap-1.5"
+                  >
+                    <span>{kw.name}</span>
+                    <span className="text-[10px] text-blue-600 font-mono">
+                      {kw.count}x
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: INDUSTRY BENCHMARK */}
         {activeTab === "benchmark" && (
           <div className="space-y-4">
             {benchmark ? (
@@ -635,136 +849,7 @@ export function DiagnosticPanel({
           </div>
         )}
 
-        {/* TAB 3: KEYWORDS */}
-        {activeTab === "keywords" && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-rose-700 block">
-                Missing Keywords ({missingKeywords.length})
-              </span>
-              {missingKeywords.length === 0 ? (
-                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 text-center space-y-1">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 mx-auto" />
-                  <p className="text-xs font-semibold text-emerald-900">
-                    All Critical Keywords Added!
-                  </p>
-                  <p className="text-[11px] text-zinc-500">
-                    Your skills section matches target ATS keywords.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {missingKeywords.map((kw, i) => (
-                    <div
-                      key={i}
-                      className="p-2.5 rounded-xl border border-zinc-200 bg-white flex items-center justify-between text-xs shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                        <span className="font-medium text-zinc-900">{kw.name}</span>
-                      </div>
-                      <button
-                        onClick={() => onInsertKeyword?.(kw.name)}
-                        className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-medium flex items-center gap-1 transition-colors"
-                      >
-                        <Plus className="w-3 h-3" /> Add
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-zinc-200">
-              <span className="text-xs font-semibold text-blue-700 block">
-                Detected Matching Keywords
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {result.keywords?.found?.map((kw, i) => (
-                  <span
-                    key={i}
-                    className="px-2.5 py-1 rounded-lg border border-blue-200 bg-blue-50/50 text-blue-900 text-xs flex items-center gap-1.5"
-                  >
-                    <span>{kw.name}</span>
-                    <span className="text-[10px] text-blue-600 font-mono">
-                      {kw.count}x
-                    </span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: STAR REWRITES */}
-        {activeTab === "rewrites" && (
-          <div className="space-y-3">
-            {bulletImprovements.length === 0 ? (
-              <div className="p-6 rounded-xl border border-zinc-200 bg-white text-center space-y-2 shadow-2xs">
-                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <h5 className="text-xs font-semibold text-zinc-900">
-                  All STAR Rewrites Applied!
-                </h5>
-                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto leading-relaxed">
-                  All weak experience bullets have been updated with Google XYZ metric benchmarks.
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between pb-1">
-                  <span className="text-xs font-semibold text-zinc-900">
-                    Quantified STAR Rewrites ({bulletImprovements.length})
-                  </span>
-                  <button
-                    onClick={onApplyAllImprovements}
-                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-2xs"
-                  >
-                    Apply All Rewrites
-                  </button>
-                </div>
-
-                {bulletImprovements.map((bullet, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 rounded-xl border border-zinc-200 bg-white space-y-2 text-xs shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between font-medium text-zinc-900">
-                      <span>{bullet.section}</span>
-                      <span className="text-blue-700 font-semibold text-[11px]">
-                        +{bullet.scoreAfter - bullet.scoreBefore} pts
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded bg-rose-50/70 text-zinc-700 text-[11px]">
-                      <span className="text-[10px] text-rose-700 font-semibold block">
-                        ORIGINAL
-                      </span>
-                      {bullet.original}
-                    </div>
-
-                    <div className="p-2.5 rounded bg-blue-50/80 border border-blue-100 text-zinc-900 text-xs">
-                      <span className="text-[10px] text-blue-700 font-semibold block mb-0.5">
-                        STAR REWRITE
-                      </span>
-                      {bullet.improved}
-                    </div>
-
-                    <button
-                      onClick={() => onApplyImprovement?.(bullet.original, bullet.improved)}
-                      className="w-full py-1.5 rounded-lg border border-zinc-200 hover:bg-blue-50/50 hover:border-blue-200 text-zinc-800 font-medium text-xs transition-colors"
-                    >
-                      Apply to Document
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* TAB 5: FORMAT AUDIT */}
+        {/* TAB 6: FORMAT AUDIT */}
         {activeTab === "format" && (
           <div className="space-y-3">
             <span className="text-xs font-semibold text-zinc-900 block">
@@ -798,17 +883,16 @@ export function DiagnosticPanel({
             Text up-to-date
           </span>
           <p className="text-[11px] text-zinc-500">
-            {documentContent ? documentContent.length : (result.meta?.characterCount || 459)} characters
+            All edits sync with single-column AST
           </p>
         </div>
 
         <button
           onClick={onRescan}
-          disabled={isLoading}
-          className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50"
+          className="px-3.5 py-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
         >
-          <RotateCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
-          <span>Re-scan</span>
+          <RotateCw className="w-3 h-3 text-blue-600" />
+          <span>Re-scan ATS</span>
         </button>
       </div>
     </aside>

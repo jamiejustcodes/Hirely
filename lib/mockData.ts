@@ -29,6 +29,16 @@ export interface ATSIndustryBenchmark {
   adviceForTop1Percent: string;
 }
 
+export interface ATSContentAddition {
+  id?: string;
+  category: "missing_section" | "missing_tools" | "missing_scope" | "missing_certification";
+  title: string;
+  whyNeeded: string;
+  suggestedHeading: string;
+  suggestedContent: string;
+  impactPoints: number;
+}
+
 export interface ATSScanResult {
   overallScore: number;
   grade: string;
@@ -54,6 +64,7 @@ export interface ATSScanResult {
     }>;
   };
   bulletImprovements: ATSBulletImprovement[];
+  recommendedAdditions?: ATSContentAddition[];
   industryBenchmark?: ATSIndustryBenchmark;
   meta?: {
     analyzedAt?: string;

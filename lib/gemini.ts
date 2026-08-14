@@ -9,7 +9,6 @@ export async function analyzeResumeWithGemini(
   const apiKey = providedApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
 
   if (apiKey) {
-    // Verified working models on Google Generative AI in order of speed and stability
     const candidateModels = [
       "gemini-flash-lite-latest",
       "gemini-3.1-flash-lite",
@@ -26,8 +25,8 @@ export async function analyzeResumeWithGemini(
       : "Industry standard baseline matching the candidate's exact profession and seniority.";
 
     const prompt = `
-You are Hirely ATS Engine, an expert Applicant Tracking System (ATS) auditor and executive resume consultant.
-Analyze the candidate's real resume text against the target job description.
+You are Hirely ATS Engine, an elite resume consultant and Applicant Tracking System (ATS) auditor.
+Your job is to elevate the candidate's resume so it passes ATS filters, achieves top-percentile ranking, and impresses hiring managers WITHOUT fabricating false information.
 
 Candidate Resume Text:
 """
@@ -39,33 +38,38 @@ Target Job Description / Context:
 ${targetJob.slice(0, 8000)}
 """
 
-CRITICAL INSTRUCTIONS FOR ACCURACY & REALISM:
-1. DETECT THE CANDIDATE'S ACTUAL PROFESSION & DOMAIN:
-   - Identify whether the candidate is in Sales, Logistics, Operations, Project Management, Customer Service, Healthcare, Marketing, Finance, Software Engineering, etc.
-   - ALWAYS ground your evaluation, keywords, and rewrites in their TRUE domain.
-   - NEVER hallucinate fake software engineering metrics (like latency, QPS, GitHub PRs, system downtime, microservices) for non-software roles like sales, logistics, admin, or management.
+CRITICAL AUDIT & REWRITE INSTRUCTIONS:
+1. STRICT ZERO-FABRICATION POLICY (NO FAKE NUMBERS OR FAKE FACTS):
+   - NEVER invent fake statistical percentages (e.g., "18%", "25%", "38%"), fake client counts (e.g., "over 50 enterprise clients"), fake dollar amounts, or fake revenue figures that the candidate NEVER stated.
+   - NEVER invent fake software frameworks, fake tools, or fake responsibilities that the candidate did not mention.
+   - If the candidate's original bullet already contains real numbers, preserve and highlight them accurately.
+   - If the candidate's original bullet does NOT contain numbers, DO NOT make up numbers. Instead, elevate the language: convert passive duties into strong active power verbs, improve sentence flow, eliminate filler words, and highlight operational and business impact truthfully.
 
-2. BULLET REWRITE RULES (STAR / Google XYZ Framework):
-   - Only select real achievement or task bullet points from the candidate's WORK EXPERIENCE section.
+2. WHAT MAKES A GREAT, HONEST REWRITE:
+   - Strong Action Verbs: Replace weak phrases like "Responsible for", "Helped with", "Facilitated", "Handled", "Worked on" with executive verbs like "Spearheaded", "Directed", "Coordinated", "Orchestrated", "Streamlined", "Engineered", "Executed", "Negotiated".
+   - Concise & Professional: Eliminate run-on sentences, repetitive words, and casual phrasing.
+   - Keyword Optimization: Naturally integrate relevant ATS keywords related to their actual work.
+   - 100% Verifiable in an Interview: The candidate must be able to stand behind every word in an interview with confidence.
+
+3. DETECT MISSING ROLE-SPECIFIC SECTIONS & CONTENT GAPS (CRITICAL):
+   - Inspect what critical sections, competencies, or tool clusters are completely MISSING from this CV based on their target profession.
+   - Examples of high-value additions:
+     * Missing dedicated "TECHNICAL TOOLS & SYSTEMS" breakdown (e.g., ERP, WMS, CRM platforms like Salesforce/SAP/Oracle, Excel advanced analysis).
+     * Missing "CORE COMPETENCIES & METHODOLOGIES" breakdown.
+     * Missing "KEY ACHIEVEMENTS & LEADERSHIP" section.
+     * Missing critical role-specific responsibilities (e.g. vendor negotiation, SLA compliance, cross-functional stakeholder reporting).
+   - Provide 1 to 3 "recommendedAdditions" with formatted, ready-to-insert text blocks that the candidate can review and insert directly into their document in 1 click.
+
+4. TARGETING WORK EXPERIENCE ONLY:
+   - Only select actual achievement or task lines from the WORK EXPERIENCE section.
    - NEVER select candidate name, contact details, education headers, section titles, or the introductory SUMMARY paragraph.
-   - The "original" field MUST BE an EXACT, verbatim substring from the candidate's resume so it can be highlighted in the document editor.
-   - The "improved" rewrite MUST sound natural, realistic, professional, and believable for their actual seniority level.
-   - Elevate passive verbs (e.g. "Responsible for", "Helped with", "Worked on", "Handled") into strong active power verbs (e.g. "Spearheaded", "Streamlined", "Negotiated", "Coordinated", "Orchestrated", "Implemented").
-   - Add realistic, believable metrics proportional to their domain (e.g. for logistics: on-time delivery rate, inventory accuracy %, dispatch volume; for sales: conversion rate, client retention %, revenue target; for management: cross-functional team size, project turnaround time).
-   - Provide 2 to 5 high-impact bullet improvements.
-
-3. KEYWORD ANALYSIS:
-   - Extract real keywords found in their resume.
-   - Identify genuine, relevant missing keywords based on standard industry requirements for their specific domain.
-
-4. OVERALL ATS EVALUATION:
-   - Provide an objective overall ATS score (0 to 100) based on keyword density, quantifiable impact, formatting clarity, and role relevance.
+   - The "original" property MUST be an EXACT verbatim substring from the candidate's resume so it can be highlighted in the editor.
 
 Return a STRICT JSON object matching this structure:
 {
   "overallScore": number (0 to 100),
   "grade": string (e.g. "Strong Match (Top 15%)", "Moderate Match", "Needs Optimization"),
-  "summary": string (2-3 concise sentences explaining candidate's fit, strengths, and priority areas for improvement),
+  "summary": string (2-3 concise sentences detailing overall fit, strongest skills, and main areas for improvement),
   "categoryScores": {
     "keywordMatch": number (0-100),
     "hardSkills": number (0-100),
@@ -94,18 +98,28 @@ Return a STRICT JSON object matching this structure:
   },
   "bulletImprovements": [
     {
-      "section": string (e.g. "Sales & Logistics Experience"),
+      "section": string (e.g. "Work Experience"),
       "original": string (EXACT verbatim line from resume experience),
-      "improved": string (Realistic STAR rewrite grounded in their actual domain),
+      "improved": string (Honest, executive rewrite with strong action verbs and zero fabricated statistics),
       "scoreBefore": number (0-100),
       "scoreAfter": number (0-100),
-      "explanation": string (Clear explanation of what was improved: action verb + context + measurable outcome),
-      "appliedFramework": string (e.g. "STAR Method", "Google XYZ Formula", "Quantified Impact")
+      "explanation": string (Explain the structural improvement: stronger active verb, conciseness, clearer impact),
+      "appliedFramework": string (e.g. "Executive Action Verb + Scope + Outcome")
+    }
+  ],
+  "recommendedAdditions": [
+    {
+      "category": "missing_section" | "missing_tools" | "missing_scope" | "missing_certification",
+      "title": string (e.g. "Missing Dedicated Technical Tools & Systems Section"),
+      "whyNeeded": string (e.g. "ATS algorithms and hiring managers screen heavily for specialized tools. Adding this section directly increases keyword match score."),
+      "suggestedHeading": string (e.g. "TECHNICAL TOOLS & SYSTEMS"),
+      "suggestedContent": string (e.g. "• Enterprise Platforms: SAP ERP, Oracle NetSuite, Warehouse Management Systems (WMS)\n• CRM & Sales Tools: Salesforce, HubSpot, Microsoft Dynamics\n• Analytics & Reporting: Microsoft Excel (VLOOKUP, Pivot Tables), Power BI"),
+      "impactPoints": number (e.g. 10 to 15)
     }
   ],
   "industryBenchmark": {
-    "detectedProfession": string (e.g. "Sales & Logistics Coordinator"),
-    "seniorityLevel": string (e.g. "Mid-Level Professional (3-5 Years)"),
+    "detectedProfession": string,
+    "seniorityLevel": string,
     "industryPercentile": number (0-100),
     "topTierStandards": [
       string,
@@ -136,14 +150,13 @@ Return a STRICT JSON object matching this structure:
           model: modelName,
           generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.15,
+            temperature: 0.1,
           },
         });
 
         const result = await model.generateContent(prompt);
         let textResponse = result.response.text().trim();
 
-        // Strip markdown code fences if present
         if (textResponse.startsWith("```")) {
           textResponse = textResponse.replace(/^```(json)?\n?/, "").replace(/\n?```$/, "");
         }
@@ -158,7 +171,7 @@ Return a STRICT JSON object matching this structure:
     }
   }
 
-  // Domain-Aware, Grounded Fallback Generator
+  // Domain-Aware, Zero-Fabrication Fallback
   return generateDynamicAnalysis(resumeText, jobDescription);
 }
 
@@ -169,15 +182,14 @@ function generateDynamicAnalysis(
   const textLower = resumeText.toLowerCase();
   const jdLower = (jobDescription || "").toLowerCase();
 
-  // Detect genuine domain
-  let detectedRole = "Operations & Management Professional";
+  let detectedRole = "Operations & Business Professional";
   let domain: "tech" | "sales" | "logistics" | "product" | "marketing" | "general" = "general";
 
   if (textLower.includes("logistics") || textLower.includes("warehouse") || textLower.includes("dispatch") || textLower.includes("inventory")) {
-    detectedRole = "Sales & Logistics Coordinator";
+    detectedRole = "Sales & Logistics Specialist";
     domain = "logistics";
   } else if (textLower.includes("sales") || textLower.includes("account executive") || textLower.includes("revenue") || textLower.includes("client relations")) {
-    detectedRole = "Business Sales & Account Executive";
+    detectedRole = "Business Sales Specialist";
     domain = "sales";
   } else if (textLower.includes("software") || textLower.includes("engineer") || textLower.includes("developer") || textLower.includes("frontend") || textLower.includes("backend")) {
     detectedRole = "Software Engineer";
@@ -190,7 +202,6 @@ function generateDynamicAnalysis(
     domain = "marketing";
   }
 
-  // Extract actual experience bullet lines (ignoring summary, headers, short lines, contact info)
   const lines = resumeText
     .split("\n")
     .map((l) => l.trim())
@@ -208,37 +219,63 @@ function generateDynamicAnalysis(
         !lower.includes("email") &&
         !lower.includes("birmingham") &&
         !lower.includes("london") &&
-        !lower.startsWith("versatile and reliable professional")
+        !lower.startsWith("versatile and reliable")
       );
     });
 
-  // Pick actual bullet lines
   const bulletLines = lines.filter((l) => l.startsWith("•") || l.startsWith("-") || l.startsWith("*") || l.length > 35);
   const targetBullet1 = bulletLines[0] || lines[0] || "Managed daily operations and client communications.";
   const targetBullet2 = bulletLines[1] || lines[1] || "Coordinated project tasks to meet strict delivery deadlines.";
 
-  // Clean bullet prefix for rewrite generation
-  const clean1 = targetBullet1.replace(/^[•\-* ]+/, "");
-  const clean2 = targetBullet2.replace(/^[•\-* ]+/, "");
+  let rewrite1 = `Spearheaded daily operational workflows and client communications, optimizing turnaround times and maintaining consistent client satisfaction.`;
+  let rewrite2 = `Coordinated cross-functional project execution across operations and account management, resolving bottlenecks to ensure on-time milestone delivery.`;
 
-  // Domain-specific realistic rewrites
-  let rewrite1 = `Spearheaded daily operational workflows and client communications, improving turnaround efficiency by 22% and maintaining a 98% client satisfaction rating.`;
-  let rewrite2 = `Coordinated cross-functional task delivery across logistics and customer accounts, resolving operational bottlenecks to achieve a 95% on-time project completion rate.`;
+  let recommendedAdditions: ATSScanResult["recommendedAdditions"] = [];
 
   if (domain === "logistics" || domain === "sales") {
-    rewrite1 = `Managed client accounts and coordinated dispatch workflows across regional distribution networks, reducing delivery turnaround times by 18% while maintaining a 99% fulfillment accuracy rate.`;
-    rewrite2 = `Handled client inquiries and proactively resolved delivery escalations, achieving a 95% on-time resolution rate and driving repeat business across key commercial accounts.`;
+    rewrite1 = `Spearheaded B2B sales cycles and directed critical warehouse operations, optimizing inventory handling, logistics execution, and shipment dispatch to achieve operational and sales targets.`;
+    rewrite2 = `Managed client communications and proactively resolved delivery escalations, strengthening partner relationships and ensuring seamless order fulfillment.`;
+
+    recommendedAdditions = [
+      {
+        category: "missing_tools",
+        title: "Missing Technical Systems & Tools Section",
+        whyNeeded: "Sales & logistics recruiters screen heavily for ERP, WMS, and CRM platforms. Adding this dedicated section boosts ATS match significantly.",
+        suggestedHeading: "TECHNICAL TOOLS & SYSTEMS",
+        suggestedContent: "• Logistics & ERP Platforms: Warehouse Management Systems (WMS), Enterprise Resource Planning (ERP)\n• Sales & CRM: CRM Software (Salesforce / HubSpot), Client Account Management\n• Productivity & Reporting: Microsoft Excel (VLOOKUP, Pivot Tables), Inventory Tracking Spreadsheets",
+        impactPoints: 12,
+      },
+      {
+        category: "missing_scope",
+        title: "Missing Vendor & Stakeholder Management Scope",
+        whyNeeded: "Top-tier logistics candidates demonstrate direct coordination with freight carriers and supplier negotiations.",
+        suggestedHeading: "SUPPLY CHAIN & VENDOR COLLABORATION",
+        suggestedContent: "• Coordinated directly with third-party logistics (3PL) freight carriers and suppliers to negotiate delivery timelines and resolve supply chain bottlenecks.\n• Maintained strict compliance with warehouse safety standards and dispatch protocols.",
+        impactPoints: 8,
+      },
+    ];
   } else if (domain === "tech") {
-    rewrite1 = `Engineered and optimized core functional modules, improving application responsiveness by 24% and maintaining zero high-priority defects across release cycles.`;
-    rewrite2 = `Collaborated with cross-functional engineers and stakeholders, streamlining code integration workflows to accelerate feature delivery cycles by 20%.`;
+    rewrite1 = `Engineered and maintained core functional modules, improving application reliability and code quality across regular release cycles.`;
+    rewrite2 = `Collaborated with cross-functional engineering teams, streamlining code integration workflows to enhance team development velocity.`;
+
+    recommendedAdditions = [
+      {
+        category: "missing_tools",
+        title: "Missing Cloud & DevOps Cluster",
+        whyNeeded: "Modern software engineering positions require automated CI/CD and cloud deployment context.",
+        suggestedHeading: "CLOUD & DEVOPS INFRASTRUCTURE",
+        suggestedContent: "• Cloud & Containers: AWS / GCP, Docker, Containerized Deployments\n• CI/CD & Testing: GitHub Actions, Automated Unit & Integration Testing (Jest, Playwright)\n• Architecture: RESTful APIs, Microservices, Relational Database Modeling (SQL / PostgreSQL)",
+        impactPoints: 12,
+      },
+    ];
   }
 
   const domainKeywords: Record<string, string[]> = {
-    logistics: ["Logistics Coordination", "Inventory Management", "Supply Chain", "Client Relations", "Dispatch Scheduling", "Process Optimization", "Vendor Management", "Account Retention"],
-    sales: ["Client Relationship Management", "Sales Pipeline", "Account Management", "Revenue Growth", "Negotiation", "B2B Sales", "Customer Retention", "Contract Renewal"],
+    logistics: ["Logistics Coordination", "Inventory Management", "Supply Chain", "Client Relations", "Dispatch Scheduling", "Process Optimization", "Vendor Management", "Order Fulfillment"],
+    sales: ["B2B Sales", "Client Relationship Management", "Sales Pipeline", "Account Management", "Negotiation", "Customer Retention", "Contract Renewal"],
     tech: ["TypeScript", "React", "Node.js", "Python", "SQL", "API Integration", "CI/CD", "Git", "System Design", "Agile"],
     product: ["Product Strategy", "User Research", "Agile Roadmap", "KPI Tracking", "Sprint Planning", "Stakeholder Alignment"],
-    marketing: ["Digital Marketing", "SEO Strategy", "Campaign Analytics", "Lead Generation", "Content Strategy", "Conversion Rate Optimization"],
+    marketing: ["Digital Marketing", "SEO Strategy", "Campaign Analytics", "Lead Generation", "Content Strategy", "Conversion Optimization"],
     general: ["Project Management", "Process Optimization", "Client Relations", "Cross-Functional Leadership", "Stakeholder Communication", "Workflow Automation"]
   };
 
@@ -260,8 +297,8 @@ function generateDynamicAnalysis(
 
   return {
     overallScore: baseScore,
-    grade: baseScore >= 80 ? "Strong Candidate (Top 20%)" : "Moderate Match (Needs Metrics)",
-    summary: `Resume evaluated for ${detectedRole}. Strong foundational experience identified. Elevating task-based descriptions into quantified STAR achievement statements will significantly improve ATS ranking and recruiter conversion.`,
+    grade: baseScore >= 80 ? "Strong Candidate (Top 20%)" : "Moderate Match",
+    summary: `Resume evaluated for ${detectedRole}. Strong foundational experience identified. Adding missing technical tool clusters and elevating passive duty statements with executive action verbs will maximize ATS ranking and recruiter interest.`,
     categoryScores: {
       keywordMatch: Math.min(94, baseScore + 4),
       hardSkills: Math.min(90, baseScore + 2),
@@ -277,16 +314,16 @@ function generateDynamicAnalysis(
       status: "pass",
       issues: [
         {
-          title: "Single-Column Text Hierarchy Verified",
+          title: "Single-Column Layout Verified",
           severity: "low",
           description: "Clean linear ATS readability verified for Workday, Taleo, and Greenhouse parsers.",
           fix: "Maintain clear section headings.",
         },
         {
-          title: "Experience Bullets Lack Measurable Outcomes",
+          title: "Experience Bullets Use Passive Duty Language",
           severity: "medium",
-          description: "Several bullet points describe daily duties rather than measurable results.",
-          fix: "Apply the STAR method: Action Verb + Context + Quantified Business Outcome.",
+          description: "Several bullet points describe daily tasks rather than proactive leadership and operational impact.",
+          fix: "Elevate opening verbs into strong active leadership verbs (e.g., 'Spearheaded', 'Directed', 'Orchestrated').",
         },
       ],
     },
@@ -296,55 +333,57 @@ function generateDynamicAnalysis(
         original: targetBullet1,
         improved: rewrite1,
         scoreBefore: 55,
-        scoreAfter: 94,
-        explanation: "Replaced generic task description with an active power verb, clear operational scope, and measurable efficiency/satisfaction outcomes.",
-        appliedFramework: "STAR Impact Framework",
+        scoreAfter: 92,
+        explanation: "Elevated passive phrasing into executive action verbs, streamlined structure for ATS clarity, and highlighted core operational responsibilities without unverified data.",
+        appliedFramework: "Executive Action Verb + Operational Scope",
       },
       {
-        section: "Client & Project Coordination",
+        section: "Client & Logistics Coordination",
         original: targetBullet2,
         improved: rewrite2,
         scoreBefore: 52,
-        scoreAfter: 92,
-        explanation: "Transformed passive responsibility into proactive problem resolution with concrete turnaround metrics.",
-        appliedFramework: "Google XYZ Method (Accomplished [X] as measured by [Y] by doing [Z])",
+        scoreAfter: 90,
+        explanation: "Replaced task description with proactive coordination and problem resolution phrasing.",
+        appliedFramework: "Problem-Action-Result (PAR) Framework",
       },
     ],
+    recommendedAdditions,
     industryBenchmark: {
       detectedProfession: detectedRole,
       seniorityLevel: "Experienced Professional",
       industryPercentile: Math.min(94, baseScore + 2),
       topTierStandards: [
-        "Leads with quantified business impact (percentages, volume, turnaround times)",
-        "Demonstrates proactive issue resolution and stakeholder communication",
+        "Leads every bullet point with strong active leadership verbs",
+        "Includes dedicated Technical Tools / Systems section matching role requirements",
+        "Demonstrates proactive issue resolution and client collaboration",
         "Clear progression of project and operational ownership"
       ],
       candidateComparison: [
         {
-          dimension: "Quantified Business Outcomes",
-          candidateStatus: "Descriptive tasks, needs specific percentage / volume metrics",
-          topTierStandard: "80%+ of bullets include measurable results",
+          dimension: "Active Verb Strength",
+          candidateStatus: "Uses basic task phrasing ('Facilitated', 'Handled')",
+          topTierStandard: "Leads with executive verbs ('Directed', 'Spearheaded')",
           status: "below",
         },
         {
-          dimension: "Industry Keyword Density",
-          candidateStatus: "Solid core terminology aligned with role",
-          topTierStandard: "Comprehensive coverage of domain competencies",
+          dimension: "Domain Terminology",
+          candidateStatus: "Solid core operational terms",
+          topTierStandard: "Clear alignment with industry competencies and tool clusters",
           status: "meets",
         },
         {
-          dimension: "Scope of Responsibility",
-          candidateStatus: "Clear operational ownership demonstrated",
-          topTierStandard: "Demonstrates cross-functional coordination and client retention",
+          dimension: "Operational Scope",
+          candidateStatus: "Clear ownership across multiple functions",
+          topTierStandard: "Demonstrates cross-functional leadership and client success",
           status: "meets",
         },
       ],
-      adviceForTop1Percent: `To rank among the top candidates for ${detectedRole}, replace routine duty descriptions with quantified achievements demonstrating operational efficiency and client satisfaction.`,
+      adviceForTop1Percent: `To rank among the top candidates for ${detectedRole}, add a dedicated Technical Tools/Systems breakdown and replace routine duty descriptions with proactive leadership language.`,
     },
     actionPlan: [
-      "Add measurable results (e.g. fulfillment accuracy %, volume handled, client retention) to your work experience bullets.",
-      "Incorporate missing core competencies into your skills and experience sections.",
-      "Highlight specific tools and systems used for operations, inventory, or client management.",
+      "Add a dedicated Technical Tools & Systems section to pass automated software keyword filters.",
+      "Replace passive verbs ('Handled', 'Facilitated') with high-impact executive verbs ('Directed', 'Spearheaded', 'Orchestrated').",
+      "If you have personal metrics (e.g. order volume or fulfillment rates), add your exact numbers to quantify your impact.",
     ],
   };
 }

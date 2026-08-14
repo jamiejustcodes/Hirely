@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
 import { DocumentEditor } from "@/components/workspace/DocumentEditor";
 import { DiagnosticPanel } from "@/components/workspace/DiagnosticPanel";
-import { ATSScanResult, SAMPLE_DATA } from "@/lib/mockData";
+import { ATSScanResult, ATSContentAddition, SAMPLE_DATA } from "@/lib/mockData";
 import { replaceBulletBlock, normalizeResumeText } from "@/lib/utils";
 import {
   Sparkles,
@@ -294,6 +294,39 @@ export default function ScanWorkspacePage() {
     }
   };
 
+  const handleInsertAddition = (addition: ATSContentAddition) => {
+    if (!content) return;
+    pushToHistory(content);
+
+    const formattedBlock = `\n\n${addition.suggestedHeading.toUpperCase()}\n${addition.suggestedContent}`;
+    const updated = `${content.trim()}${formattedBlock}`;
+
+    setContent(updated);
+    sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
+
+    setUndoToast({
+      visible: true,
+      message: `Added "${addition.suggestedHeading}" section to CV`,
+    });
+    setTimeout(() => setUndoToast(null), 5000);
+
+    if (scanResult) {
+      const remaining = (scanResult.recommendedAdditions || []).filter(
+        (a) => a.title !== addition.title
+      );
+      setScanResult({
+        ...scanResult,
+        overallScore: Math.min(99, scanResult.overallScore + (addition.impactPoints || 12)),
+        recommendedAdditions: remaining,
+        categoryScores: {
+          ...scanResult.categoryScores,
+          hardSkills: Math.min(99, (scanResult.categoryScores?.hardSkills || 75) + 6),
+          keywordMatch: Math.min(99, (scanResult.categoryScores?.keywordMatch || 75) + 6),
+        },
+      });
+    }
+  };
+
   const handleSaveApiKey = () => {
     if (customApiKey.trim()) {
       localStorage.setItem("HIRELY_GEMINI_API_KEY", customApiKey.trim());
@@ -480,6 +513,7 @@ export default function ScanWorkspacePage() {
             onRescan={() => handlePerformScan(content, jobDescription)}
             onApplyImprovement={handleApplyImprovement}
             onInsertKeyword={handleInsertKeyword}
+            onInsertAddition={handleInsertAddition}
             onApplyAllImprovements={handleApplyAllImprovements}
             documentContent={content}
             documentName={documentName}
