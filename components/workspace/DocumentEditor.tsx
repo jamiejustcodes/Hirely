@@ -119,15 +119,18 @@ export function DocumentEditor({
             return <div key={lineIdx} className="h-2" />;
           }
 
-          // 1. Check if line matches a STAR rewrite recommendation
+          // 1. Check if line matches a STAR rewrite recommendation (excluding headers)
           const cleanLine = trimmed.replace(/^["'•\-* ]+/, "").toLowerCase();
-          const matchingImprovement = bulletImprovements.find((b) => {
-            const cleanOriginal = b.original.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
-            return (
-              cleanLine.includes(cleanOriginal.slice(0, 25)) ||
-              cleanOriginal.includes(cleanLine.slice(0, 25))
-            );
-          });
+          const isSectionHeader = /^(summary|professional summary|executive summary|experience|work experience|work history|skills|technical skills|education|projects|certifications|awards):?$/i.test(cleanLine.trim());
+          const matchingImprovement = !isSectionHeader && cleanLine.length >= 15
+            ? bulletImprovements.find((b) => {
+                const cleanOriginal = b.original.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
+                if (cleanOriginal.length < 10) return false;
+                const snippet = cleanOriginal.slice(0, 30);
+                const lineSnippet = cleanLine.slice(0, 30);
+                return cleanLine.includes(snippet) || cleanOriginal.includes(lineSnippet);
+              })
+            : undefined;
 
           if (matchingImprovement) {
             const isBullet = trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*");
