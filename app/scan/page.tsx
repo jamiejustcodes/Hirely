@@ -154,16 +154,38 @@ export default function ScanWorkspacePage() {
     }
   };
 
-  // Full-bullet block replacement: replaces the entire multi-line bullet with the STAR sentence
+  // Full-bullet block replacement & immediate suggestion removal
   const handleApplyImprovement = (original: string, improved: string) => {
     if (!content) return;
     const updated = replaceBulletBlock(content, original, improved);
     setContent(updated);
     sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
-    bumpScore();
+
+    // Remove the applied suggestion from bulletImprovements so it disappears immediately
+    if (scanResult) {
+      const cleanOrig = original.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
+      const remaining = (scanResult.bulletImprovements || []).filter((b) => {
+        const cleanB = b.original.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
+        return (
+          b.original !== original &&
+          !cleanB.includes(cleanOrig.slice(0, 20)) &&
+          !cleanOrig.includes(cleanB.slice(0, 20))
+        );
+      });
+
+      setScanResult({
+        ...scanResult,
+        overallScore: Math.min(99, scanResult.overallScore + 4),
+        bulletImprovements: remaining,
+        categoryScores: {
+          ...scanResult.categoryScores,
+          impactAndMetrics: Math.min(99, (scanResult.categoryScores?.impactAndMetrics || 70) + 6),
+        },
+      });
+    }
   };
 
-  // 1-Click apply ALL STAR improvements across entire resume
+  // 1-Click apply ALL STAR improvements across entire resume & clear suggestions
   const handleApplyAllImprovements = () => {
     if (!content || !scanResult?.bulletImprovements?.length) return;
 
@@ -178,10 +200,11 @@ export default function ScanWorkspacePage() {
     if (scanResult) {
       setScanResult({
         ...scanResult,
-        overallScore: Math.min(98, scanResult.overallScore + 12),
+        overallScore: Math.min(99, scanResult.overallScore + 12),
+        bulletImprovements: [], // Clears all since all were applied!
         categoryScores: {
           ...scanResult.categoryScores,
-          impactAndMetrics: 95,
+          impactAndMetrics: 98,
         },
       });
     }
@@ -219,19 +242,6 @@ export default function ScanWorkspacePage() {
             ...(scanResult.keywords.found || []),
             { name: keyword, count: 1, category: "hard" },
           ],
-        },
-      });
-    }
-  };
-
-  const bumpScore = () => {
-    if (scanResult) {
-      setScanResult({
-        ...scanResult,
-        overallScore: Math.min(98, scanResult.overallScore + 4),
-        categoryScores: {
-          ...scanResult.categoryScores,
-          impactAndMetrics: Math.min(98, (scanResult.categoryScores?.impactAndMetrics || 70) + 6),
         },
       });
     }
@@ -282,7 +292,7 @@ export default function ScanWorkspacePage() {
               className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Apply All Rewrites</span>
+              <span>Apply All Rewrites ({scanResult.bulletImprovements.length})</span>
             </button>
           ) : null}
 
