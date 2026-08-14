@@ -41,6 +41,13 @@ export default function Home() {
           body: formData,
         });
 
+        if (response.status === 429) {
+          const json = await response.json();
+          alert(json.error || "Daily limit of 3 scans per day per IP reached. You can connect your own free Gemini API key in studio settings.");
+          router.push("/scan");
+          return;
+        }
+
         if (response.ok) {
           const json = await response.json();
           if (typeof window !== "undefined") {

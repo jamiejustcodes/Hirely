@@ -22,6 +22,7 @@ import {
   RotateCw,
   LayoutTemplate,
   PieChart,
+  ShieldAlert,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -34,6 +35,8 @@ export default function ScanWorkspacePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [newScanModalOpen, setNewScanModalOpen] = useState(false);
+  const [rateLimitModalOpen, setRateLimitModalOpen] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState("");
   const [jobDrawerOpen, setJobDrawerOpen] = useState(false);
   const [customApiKey, setCustomApiKey] = useState("");
   const [apiKeySaved, setApiKeySaved] = useState(false);
@@ -117,6 +120,14 @@ export default function ScanWorkspacePage() {
         }),
       });
 
+      if (response.status === 429) {
+        const json = await response.json();
+        setRateLimitMessage(json.error || "Daily limit of 3 scans per day per IP reached.");
+        setRateLimitModalOpen(true);
+        setIsLoading(false);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error("Scan request failed");
       }
@@ -170,6 +181,14 @@ export default function ScanWorkspacePage() {
         method: "POST",
         body: formData,
       });
+
+      if (response.status === 429) {
+        const json = await response.json();
+        setRateLimitMessage(json.error || "Daily limit of 3 scans per day per IP reached.");
+        setRateLimitModalOpen(true);
+        setIsLoading(false);
+        return;
+      }
 
       if (response.ok) {
         const json = await response.json();
@@ -628,6 +647,68 @@ export default function ScanWorkspacePage() {
                 className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors"
               >
                 Scan Text
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rate Limit Exceeded Modal (3 Scans/Day) */}
+      {rateLimitModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-rose-100 rounded-2xl p-6 shadow-2xl space-y-4 animate-fadeIn">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-600">
+                <div className="w-8 h-8 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center">
+                  <ShieldAlert className="w-4 h-4 text-rose-600" />
+                </div>
+                <h3 className="font-semibold text-sm text-zinc-900">
+                  Daily Scan Limit Reached
+                </h3>
+              </div>
+              <button
+                onClick={() => setRateLimitModalOpen(false)}
+                className="p-1 rounded text-zinc-400 hover:text-zinc-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-rose-50/60 border border-rose-100 text-xs text-zinc-700 space-y-1 leading-relaxed">
+              <p className="font-medium text-rose-950">
+                Free Quota: 3 scans per day per IP
+              </p>
+              <p className="text-[11px] text-zinc-600">
+                {rateLimitMessage || "Your IP address has submitted the maximum of 3 free resume scans for today to ensure server stability."}
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-zinc-700 space-y-1.5 leading-relaxed">
+              <p className="font-semibold text-blue-900 flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-blue-600" />
+                Unlock Unlimited Free Scans:
+              </p>
+              <p className="text-[11px] text-zinc-600">
+                You can plug in your own free Google Gemini API key (with 1,500 free requests/day) to bypass all IP limits permanently.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                onClick={() => setRateLimitModalOpen(false)}
+                className="px-3.5 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-xs font-medium"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setRateLimitModalOpen(false);
+                  setSettingsOpen(true);
+                }}
+                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
+              >
+                <Key className="w-3 h-3" />
+                <span>Add Free API Key</span>
               </button>
             </div>
           </div>

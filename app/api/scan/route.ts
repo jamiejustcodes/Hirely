@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeResumeWithGemini } from "@/lib/gemini";
 import { normalizeResumeText } from "@/lib/utils";
+import { getClientIp, checkRateLimit } from "@/lib/rateLimit";
 import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 
@@ -82,19 +83,61 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // IP Rate Limiting: 3 submissions per IP per calendar day
+    const clientIp = getClientIp(req);
+    const hasCustomKey = Boolean(apiKey && apiKey.trim().length > 10);
+    
+    // Check rate limit (custom API keys bypass the public IP rate limit)
+    const rateLimit = checkRateLimit(clientIp, 3);
+
+    if (!hasCustomKey && !rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: "Daily scan limit reached. Your IP address has submitted the maximum of 3 free resume scans for today. Please try again tomorrow, or add your own personal Gemini API key in Studio settings to continue scanning.",
+          rateLimited: true,
+          limit: rateLimit.limit,
+          remaining: 0,
+          resetAt: rateLimit.resetDateString,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": rateLimit.limit.toString(),
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": rateLimit.resetAt.toString(),
+            "Retry-After": "86400",
+          },
+        }
+      );
+    }
+
     // Call live Gemini engine
     const scanResult = await analyzeResumeWithGemini(resumeText, jobDescription, apiKey);
 
-    return NextResponse.json({
-      success: true,
-      data: scanResult,
-      extractedText: resumeText,
-      documentName: fileName,
-      meta: {
-        analyzedAt: new Date().toISOString(),
-        characterCount: resumeText.length,
+    return NextResponse.json(
+      {
+        success: true,
+        data: scanResult,
+        extractedText: resumeText,
+        documentName: fileName,
+        rateLimit: {
+          limit: rateLimit.limit,
+          remaining: hasCustomKey ? "unlimited" : rateLimit.remaining,
+          resetAt: rateLimit.resetDateString,
+        },
+        meta: {
+          analyzedAt: new Date().toISOString(),
+          characterCount: resumeText.length,
+        },
       },
-    });
+      {
+        headers: {
+          "X-RateLimit-Limit": rateLimit.limit.toString(),
+          "X-RateLimit-Remaining": hasCustomKey ? "unlimited" : rateLimit.remaining.toString(),
+          "X-RateLimit-Reset": rateLimit.resetAt.toString(),
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Error processing ATS scan request:", error);
     return NextResponse.json(
