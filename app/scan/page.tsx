@@ -7,6 +7,7 @@ import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
 import { DocumentEditor } from "@/components/workspace/DocumentEditor";
 import { DiagnosticPanel } from "@/components/workspace/DiagnosticPanel";
 import { ATSScanResult, SAMPLE_DATA } from "@/lib/mockData";
+import { replaceBulletBlock, normalizeResumeText } from "@/lib/utils";
 import { Sparkles, Key, Check, ArrowLeft, UploadCloud, X, FileText } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -32,7 +33,8 @@ export default function ScanWorkspacePage() {
       const storedResult = sessionStorage.getItem("HIRELY_SCAN_RESULT");
 
       if (storedText) {
-        setContent(storedText);
+        const cleanText = normalizeResumeText(storedText);
+        setContent(cleanText);
         setDocumentName(storedDocName);
         setJobDescription(storedJd);
 
@@ -40,10 +42,10 @@ export default function ScanWorkspacePage() {
           try {
             setScanResult(JSON.parse(storedResult));
           } catch (e) {
-            handlePerformScan(storedText, storedJd);
+            handlePerformScan(cleanText, storedJd);
           }
         } else {
-          handlePerformScan(storedText, storedJd);
+          handlePerformScan(cleanText, storedJd);
         }
       } else {
         // Default sample candidate
@@ -88,9 +90,10 @@ export default function ScanWorkspacePage() {
 
       const json = await response.json();
       setScanResult(json.data);
-      if (json.extractedText && json.extractedText !== textToScan) {
-        setContent(json.extractedText);
-        sessionStorage.setItem("HIRELY_SCAN_TEXT", json.extractedText);
+      if (json.extractedText) {
+        const clean = normalizeResumeText(json.extractedText);
+        setContent(clean);
+        sessionStorage.setItem("HIRELY_SCAN_TEXT", clean);
       }
       sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
 
@@ -137,7 +140,7 @@ export default function ScanWorkspacePage() {
 
       if (response.ok) {
         const json = await response.json();
-        const extracted = json.extractedText || "";
+        const extracted = normalizeResumeText(json.extractedText || "");
         setContent(extracted);
         setScanResult(json.data);
         sessionStorage.setItem("HIRELY_SCAN_TEXT", extracted);
@@ -151,76 +154,22 @@ export default function ScanWorkspacePage() {
     }
   };
 
-  // Robust fuzzy line / snippet replacement
+  // Full-bullet block replacement: replaces the entire multi-line bullet with the STAR sentence
   const handleApplyImprovement = (original: string, improved: string) => {
     if (!content) return;
-
-    if (content.includes(original)) {
-      const updated = content.replace(original, improved);
-      setContent(updated);
-      sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
-      bumpScore();
-      return;
-    }
-
-    const cleanedOriginal = original.replace(/^["'•\-* ]+/, "").trim().slice(0, 30).toLowerCase();
-    const lines = content.split("\n");
-    let replaced = false;
-
-    const newLines = lines.map((line) => {
-      if (!replaced && line.toLowerCase().includes(cleanedOriginal)) {
-        replaced = true;
-        const prefix = line.trim().startsWith("-")
-          ? "- "
-          : line.trim().startsWith("•")
-          ? "• "
-          : line.trim().startsWith("*")
-          ? "* "
-          : "";
-        return `${prefix}${improved.replace(/^["']|["']$/g, "")}`;
-      }
-      return line;
-    });
-
-    if (replaced) {
-      const updated = newLines.join("\n");
-      setContent(updated);
-      sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
-      bumpScore();
-    } else {
-      const updated = `${content}\n\n• ${improved.replace(/^["']|["']$/g, "")}`;
-      setContent(updated);
-      sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
-      bumpScore();
-    }
+    const updated = replaceBulletBlock(content, original, improved);
+    setContent(updated);
+    sessionStorage.setItem("HIRELY_SCAN_TEXT", updated);
+    bumpScore();
   };
 
-  // 1-Click apply ALL STAR improvements across resume
+  // 1-Click apply ALL STAR improvements across entire resume
   const handleApplyAllImprovements = () => {
     if (!content || !scanResult?.bulletImprovements?.length) return;
 
     let updated = content;
     scanResult.bulletImprovements.forEach((bullet) => {
-      const cleanedOriginal = bullet.original.replace(/^["'•\-* ]+/, "").trim().slice(0, 25).toLowerCase();
-      const lines = updated.split("\n");
-      let replaced = false;
-
-      const newLines = lines.map((line) => {
-        if (!replaced && line.toLowerCase().includes(cleanedOriginal)) {
-          replaced = true;
-          const prefix = line.trim().startsWith("-")
-            ? "- "
-            : line.trim().startsWith("•")
-            ? "• "
-            : "";
-          return `${prefix}${bullet.improved.replace(/^["']|["']$/g, "")}`;
-        }
-        return line;
-      });
-
-      if (replaced) {
-        updated = newLines.join("\n");
-      }
+      updated = replaceBulletBlock(updated, bullet.original, bullet.improved);
     });
 
     setContent(updated);

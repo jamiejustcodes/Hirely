@@ -70,7 +70,8 @@ export function DocumentEditor({
           // Check if this line matches an improvement
           const matchingImprovement = bulletImprovements.find((b) => {
             const cleanOriginal = b.original.replace(/^["'•\-* ]+/, "").trim().slice(0, 25).toLowerCase();
-            return line.toLowerCase().includes(cleanOriginal) || cleanOriginal.includes(line.toLowerCase().trim().slice(0, 25));
+            const cleanLine = line.replace(/^["'•\-* ]+/, "").trim().toLowerCase();
+            return cleanLine.includes(cleanOriginal) || cleanOriginal.includes(cleanLine.slice(0, 25));
           });
 
           if (matchingImprovement) {
@@ -91,10 +92,10 @@ export function DocumentEditor({
                 {activePopover?.original === matchingImprovement.original && (
                   <div className="my-2 p-3.5 rounded-xl bg-white border border-zinc-200 shadow-xl space-y-2.5 max-w-lg z-30">
                     <div className="flex items-center justify-between text-xs pb-1.5 border-b border-zinc-100">
-                      <span className="font-semibold text-[#1b806a] flex items-center gap-1.5">
+                      <span className="font-semibold text-blue-600 flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5" /> STAR Quantified Rewrite
                       </span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold text-[10px]">
+                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 font-semibold text-[10px]">
                         +{matchingImprovement.scoreAfter - matchingImprovement.scoreBefore} pts
                       </span>
                     </div>
@@ -118,7 +119,7 @@ export function DocumentEditor({
                           );
                           setActivePopover(null);
                         }}
-                        className="px-3 py-1 rounded-lg bg-[#1b806a] hover:bg-[#156956] text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
                       >
                         <span>Apply to Document</span>
                         <ArrowRight className="w-3 h-3" />
@@ -193,8 +194,8 @@ export function DocumentEditor({
           >
             {copied ? (
               <>
-                <Check className="w-3 h-3 text-emerald-600" />
-                <span className="text-emerald-600">Copied</span>
+                <Check className="w-3 h-3 text-blue-600" />
+                <span className="text-blue-600">Copied</span>
               </>
             ) : (
               <>

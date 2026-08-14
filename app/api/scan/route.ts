@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeResumeWithGemini } from "@/lib/gemini";
+import { normalizeResumeText } from "@/lib/utils";
 import pdfParse from "pdf-parse";
 
 export async function POST(req: NextRequest) {
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
         if (file.name.toLowerCase().endsWith(".pdf")) {
           try {
             const pdfData = await pdfParse(buffer);
-            resumeText = pdfData.text;
+            resumeText = normalizeResumeText(pdfData.text);
           } catch (pdfErr) {
             console.error("PDF parse error:", pdfErr);
             return NextResponse.json(
@@ -36,15 +37,15 @@ export async function POST(req: NextRequest) {
           }
         } else {
           // Plain text / markdown
-          resumeText = buffer.toString("utf-8");
+          resumeText = normalizeResumeText(buffer.toString("utf-8"));
         }
       } else if (textParam.trim()) {
-        resumeText = textParam.trim();
+        resumeText = normalizeResumeText(textParam.trim());
       }
     } else {
       try {
         const body = await req.json();
-        resumeText = body?.resumeText || "";
+        resumeText = normalizeResumeText(body?.resumeText || "");
         jobDescription = body?.jobDescription || "";
         apiKey = body?.apiKey || "";
         if (body?.documentName) fileName = body.documentName;
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
         const rawText = await req.text();
         try {
           const parsed = JSON.parse(rawText);
-          resumeText = parsed.resumeText || "";
+          resumeText = normalizeResumeText(parsed.resumeText || "");
           jobDescription = parsed.jobDescription || "";
           apiKey = parsed.apiKey || "";
         } catch {
