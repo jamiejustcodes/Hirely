@@ -59,9 +59,11 @@ export function ScoreGauge({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="text-base font-semibold text-zinc-900 tracking-tight"
+            className={`font-bold text-zinc-950 font-sans tracking-tight ${
+              size > 100 ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"
+            }`}
           >
-            {score >= 80 ? "Match" : `${score}%`}
+            {score}%
           </motion.span>
         </div>
       </div>

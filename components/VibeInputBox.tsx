@@ -101,38 +101,40 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
         />
 
         {/* Top Presets & Active File */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-2 border-b border-zinc-100 text-xs">
-          <div className="flex items-center gap-2 flex-wrap font-sans">
-            <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-2 border-b border-zinc-100 text-xs">
+          <div className="flex items-center gap-1.5 flex-wrap font-sans">
+            <span className="text-[11px] sm:text-xs text-zinc-400 font-medium flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-sky-500" />
-              Try sample roles:
+              <span>Sample roles:</span>
             </span>
             <button
               type="button"
               onClick={() => loadSample("softwareEngineer")}
-              className="px-3 py-1 rounded-full bg-zinc-100/80 hover:bg-zinc-200/70 border border-zinc-200/60 text-zinc-700 font-sans text-xs font-medium transition-all flex items-center gap-1.5 shadow-2xs hover:border-zinc-300"
+              className="px-2.5 py-1 rounded-full bg-zinc-100/80 hover:bg-zinc-200/70 border border-zinc-200/60 text-zinc-700 font-sans text-[11px] sm:text-xs font-medium transition-all flex items-center gap-1 shadow-2xs hover:border-zinc-300 active:scale-95"
             >
               <Zap className="w-3 h-3 text-sky-500" />
-              Senior Full-Stack Engineer
+              <span>Full-Stack Engineer</span>
             </button>
             <button
               type="button"
               onClick={() => loadSample("productManager")}
-              className="px-3 py-1 rounded-full bg-zinc-100/80 hover:bg-zinc-200/70 border border-zinc-200/60 text-zinc-700 font-sans text-xs font-medium transition-all flex items-center gap-1.5 shadow-2xs hover:border-zinc-300"
+              className="px-2.5 py-1 rounded-full bg-zinc-100/80 hover:bg-zinc-200/70 border border-zinc-200/60 text-zinc-700 font-sans text-[11px] sm:text-xs font-medium transition-all flex items-center gap-1 shadow-2xs hover:border-zinc-300 active:scale-95"
             >
               <Briefcase className="w-3 h-3 text-indigo-500" />
-              Lead Product Manager
+              <span>Product Manager</span>
             </button>
           </div>
 
           {selectedFile && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200/80 font-sans text-xs font-medium">
-              <FileText className="w-3.5 h-3.5" />
-              <span className="max-w-[150px] truncate">{selectedFile.name}</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-200/80 font-sans text-xs font-medium self-start sm:self-auto shadow-2xs">
+              <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+              <span className="max-w-[160px] sm:max-w-[200px] truncate font-semibold">{selectedFile.name}</span>
+              <span className="text-[10px] text-sky-600">({(selectedFile.size / 1024).toFixed(0)} KB)</span>
               <button
                 type="button"
                 onClick={() => setSelectedFile(null)}
-                className="hover:text-rose-600 ml-1"
+                className="hover:text-rose-600 ml-1 p-0.5 rounded-full hover:bg-sky-100 transition-colors"
+                title="Remove attached file"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -146,9 +148,9 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
             <textarea
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              placeholder="Paste your full resume text here or drag & drop a PDF / DOCX file..."
+              placeholder={selectedFile ? `File "${selectedFile.name}" attached. Click "Scan Resume" below, or add extra notes / job context...` : "Paste your resume text here, or attach a PDF / DOCX file below..."}
               rows={4}
-              className="w-full text-sm sm:text-base text-zinc-900 placeholder:text-zinc-400 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none leading-relaxed font-sans"
+              className="w-full text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none leading-relaxed font-sans"
             />
           </div>
 
@@ -163,7 +165,7 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
                 <button
                   type="button"
                   onClick={() => setShowJobInput(false)}
-                  className="text-xs text-zinc-400 hover:text-zinc-600 font-sans"
+                  className="text-xs text-zinc-400 hover:text-zinc-600 font-sans px-1"
                 >
                   Hide
                 </button>
@@ -180,22 +182,22 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
         </div>
 
         {/* Bottom Utility Bar */}
-        <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="mt-3 pt-3 border-t border-zinc-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-3 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200/80 active:bg-zinc-200 text-zinc-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
             >
               <UploadCloud className="w-4 h-4 text-blue-600" />
-              <span>Attach PDF / DOCX</span>
+              <span>{selectedFile ? "Change File" : "Attach PDF / DOCX"}</span>
             </button>
 
             {!showJobInput && (
               <button
                 type="button"
                 onClick={() => setShowJobInput(true)}
-                className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 active:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
               >
                 <Briefcase className="w-3.5 h-3.5" />
                 <span>+ Add Job Post</span>
@@ -208,7 +210,7 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
             type="button"
             onClick={() => handleSubmit()}
             disabled={isLoading}
-            className="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white text-xs font-semibold tracking-wide shadow-md shadow-sky-500/25 hover:shadow-lg hover:shadow-sky-500/35 transition-all duration-200 flex items-center gap-2 disabled:opacity-60"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white text-xs font-semibold tracking-wide shadow-md shadow-sky-500/25 hover:shadow-lg hover:shadow-sky-500/35 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {isLoading ? (
               <>
@@ -217,7 +219,7 @@ export function VibeInputBox({ onScan, isLoading = false }: VibeInputBoxProps) {
               </>
             ) : (
               <>
-                <span>Scan Resume</span>
+                <span>{selectedFile ? `Scan "${selectedFile.name.slice(0, 15)}..."` : "Scan Resume"}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}

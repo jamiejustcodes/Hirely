@@ -48,35 +48,53 @@ export default function Home() {
           return;
         }
 
-        if (response.ok) {
-          const json = await response.json();
-          if (typeof window !== "undefined") {
-            sessionStorage.setItem("HIRELY_SCAN_TEXT", json.extractedText || resumeText);
-            sessionStorage.setItem("HIRELY_SCAN_JD", jobDesc);
-            sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", json.documentName || file.name);
-            sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
-          }
-          router.push("/scan");
+        if (!response.ok) {
+          const json = await response.json().catch(() => ({}));
+          alert(json.error || "Could not parse text from the uploaded file. Please ensure the PDF/DOCX contains selectable text, or paste your resume text directly.");
           return;
         }
+
+        const json = await response.json();
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("HIRELY_SCAN_TEXT", json.extractedText || resumeText);
+          sessionStorage.setItem("HIRELY_SCAN_JD", jobDesc);
+          sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", json.documentName || file.name);
+          sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
+        }
+        router.push("/scan");
+        return;
       }
 
-      // Fallback for direct text input
-      const textToUse = resumeText || SAMPLE_DATA.softwareEngineer.resumeText;
-      const jdToUse = jobDesc || SAMPLE_DATA.softwareEngineer.jobDescription;
-      const docName = file ? file.name : "My_Resume.pdf";
+      // Direct text input
+      if (resumeText.trim().length >= 15) {
+        const docName = "Pasted_Resume.txt";
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("HIRELY_SCAN_TEXT", resumeText.trim());
+          sessionStorage.setItem("HIRELY_SCAN_JD", jobDesc);
+          sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", docName);
+          sessionStorage.removeItem("HIRELY_SCAN_RESULT"); // Force fresh scan on /scan
+        }
+        router.push("/scan");
+        return;
+      }
+
+      // Explicit sample fallback only when no file and no text is provided
+      const sample = SAMPLE_DATA.softwareEngineer;
+      const textToUse = sample.resumeText;
+      const jdToUse = jobDesc || sample.jobDescription;
+      const docName = "Alex_Morgan_Software_Engineer_Resume.pdf";
 
       if (typeof window !== "undefined") {
         sessionStorage.setItem("HIRELY_SCAN_TEXT", textToUse);
         sessionStorage.setItem("HIRELY_SCAN_JD", jdToUse);
         sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", docName);
-        sessionStorage.removeItem("HIRELY_SCAN_RESULT"); // Force fresh scan on /scan
+        sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(sample.mockResult));
       }
 
       router.push("/scan");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Scan redirect error:", err);
-      router.push("/scan");
+      alert(err?.message || "An unexpected error occurred while processing your resume.");
     } finally {
       setIsLoading(false);
     }

@@ -309,23 +309,25 @@ export function DocumentEditor({
   return (
     <div className="flex-1 flex flex-col bg-[#f8f9fa] overflow-hidden">
       {/* Top Header Bar */}
-      <div className="px-4 sm:px-5 py-2.5 border-b border-zinc-200 flex items-center justify-between bg-white flex-shrink-0 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-zinc-600" />
-          <h2 className="text-xs font-semibold text-zinc-900 truncate max-w-xs sm:max-w-sm">
-            {documentName}
-          </h2>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-medium border border-zinc-200">
+      <div className="px-3 sm:px-5 py-2 border-b border-zinc-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white flex-shrink-0 gap-2">
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <FileText className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" />
+            <h2 className="text-xs font-semibold text-zinc-900 truncate max-w-[180px] sm:max-w-xs">
+              {documentName}
+            </h2>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 font-medium border border-zinc-200 flex-shrink-0">
             ATS Parsed
           </span>
         </div>
 
-        {/* View Mode Segmented Control */}
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center p-0.5 rounded-lg bg-zinc-100 border border-zinc-200 text-xs">
+        {/* View Mode Segmented Control & Copy Button */}
+        <div className="flex items-center justify-between sm:justify-end gap-1.5">
+          <div className="flex items-center p-0.5 rounded-lg bg-zinc-100 border border-zinc-200 text-xs flex-1 sm:flex-initial">
             <button
               onClick={() => setViewMode("highlights")}
-              className={`px-2.5 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
+              className={`flex-1 sm:flex-initial px-2 sm:px-2.5 py-1 rounded-md font-medium transition-colors flex items-center justify-center gap-1 text-[11px] sm:text-xs ${
                 viewMode === "highlights"
                   ? "bg-white text-zinc-950 shadow-2xs font-semibold"
                   : "text-zinc-600 hover:text-zinc-900"
@@ -337,43 +339,43 @@ export function DocumentEditor({
 
             <button
               onClick={() => setViewMode("editor")}
-              className={`px-2.5 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
+              className={`flex-1 sm:flex-initial px-2 sm:px-2.5 py-1 rounded-md font-medium transition-colors flex items-center justify-center gap-1 text-[11px] sm:text-xs ${
                 viewMode === "editor"
                   ? "bg-white text-zinc-950 shadow-2xs font-semibold"
                   : "text-zinc-600 hover:text-zinc-900"
               }`}
             >
               <Edit3 className="w-3 h-3 text-zinc-600" />
-              <span>Edit Text</span>
+              <span>Edit</span>
             </button>
 
             <button
               onClick={() => setViewMode("recruiter")}
-              className={`px-2.5 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
+              className={`flex-1 sm:flex-initial px-2 sm:px-2.5 py-1 rounded-md font-medium transition-colors flex items-center justify-center gap-1 text-[11px] sm:text-xs ${
                 viewMode === "recruiter"
                   ? "bg-white text-zinc-950 shadow-2xs font-semibold"
                   : "text-zinc-600 hover:text-zinc-900"
               }`}
             >
               <Binary className="w-3 h-3 text-indigo-600" />
-              <span>Recruiter AST</span>
+              <span>AST</span>
             </button>
           </div>
 
           <button
             onClick={handleCopy}
-            className="px-2.5 py-1 rounded-md bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
+            className="px-2.5 py-1 rounded-md bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-700 text-xs font-medium flex items-center gap-1 transition-colors shadow-2xs flex-shrink-0"
             title="Copy entire document text"
           >
             {copied ? (
               <>
                 <Check className="w-3 h-3 text-blue-600" />
-                <span className="text-blue-600">Copied</span>
+                <span className="text-blue-600 hidden xs:inline">Copied</span>
               </>
             ) : (
               <>
                 <Copy className="w-3 h-3 text-zinc-500" />
-                <span>Copy</span>
+                <span className="hidden xs:inline">Copy</span>
               </>
             )}
           </button>
@@ -381,46 +383,46 @@ export function DocumentEditor({
       </div>
 
       {/* Center Canvas Area */}
-      <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
+      <div className="flex-1 p-3 sm:p-6 md:p-8 overflow-y-auto">
         {viewMode === "recruiter" ? (
           /* Recruiter AST Simulation Mode */
-          <div className="max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-2xs space-y-6">
-            <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-mono font-bold text-xs">
+          <div className="max-w-3xl mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-2xl border border-zinc-200 shadow-2xs space-y-5">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-blue-50/70 border border-blue-100 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-mono font-bold text-xs flex-shrink-0">
                   AST
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-blue-950 font-mono uppercase">
-                    Workday & Taleo Parser Simulation
+                    Parser AST Simulation
                   </h3>
-                  <p className="text-[11px] text-zinc-600">
-                    Showing raw token extraction, contact mapping, and single-column read order.
+                  <p className="text-[10px] sm:text-[11px] text-zinc-600">
+                    Single-column linear token extraction mapping.
                   </p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold flex-shrink-0">
                 100% Parsed
               </span>
             </div>
 
             {/* Extracted Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-zinc-50 border border-zinc-200 space-y-0.5">
                 <span className="text-[10px] text-zinc-400 block flex items-center gap-1">
                   <User className="w-3 h-3" /> CANDIDATE NAME
                 </span>
                 <p className="font-semibold text-zinc-900 truncate">{astData.name}</p>
               </div>
 
-              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-zinc-50 border border-zinc-200 space-y-0.5">
                 <span className="text-[10px] text-zinc-400 block flex items-center gap-1">
                   <Mail className="w-3 h-3" /> DETECTED EMAIL
                 </span>
                 <p className="font-semibold text-zinc-900 truncate">{astData.email}</p>
               </div>
 
-              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-zinc-50 border border-zinc-200 space-y-0.5">
                 <span className="text-[10px] text-zinc-400 block flex items-center gap-1">
                   <Phone className="w-3 h-3" /> DETECTED PHONE
                 </span>
@@ -438,7 +440,7 @@ export function DocumentEditor({
                 {astData.parsedSkills.map((sk, i) => (
                   <span
                     key={i}
-                    className="px-2.5 py-1 rounded-md bg-zinc-100 border border-zinc-200 text-zinc-800 font-mono text-[11px]"
+                    className="px-2 py-0.5 rounded-md bg-zinc-100 border border-zinc-200 text-zinc-800 font-mono text-[10px] sm:text-[11px]"
                   >
                     {sk}
                   </span>
@@ -450,21 +452,21 @@ export function DocumentEditor({
             <div className="space-y-1.5">
               <span className="text-xs font-mono font-bold text-zinc-700 uppercase flex items-center gap-1.5">
                 <Binary className="w-3.5 h-3.5 text-indigo-600" />
-                Linear AST Reading Order (Zero Corrupted Blocks)
+                Linear AST Reading Order
               </span>
-              <div className="p-4 rounded-xl bg-zinc-950 text-emerald-400 font-mono text-xs overflow-x-auto max-h-72 leading-relaxed">
+              <div className="p-3 sm:p-4 rounded-xl bg-zinc-950 text-emerald-400 font-mono text-xs overflow-x-auto max-h-64 leading-relaxed">
                 <pre>{cleanDoc}</pre>
               </div>
             </div>
           </div>
         ) : (
           /* Normal White Paper Document Canvas */
-          <div className="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-xl border border-zinc-200 shadow-2xs min-h-[600px]">
+          <div className="max-w-3xl mx-auto bg-white p-4 sm:p-8 md:p-10 rounded-xl border border-zinc-200 shadow-2xs min-h-[420px] sm:min-h-[600px]">
             {viewMode === "editor" ? (
               <textarea
                 value={content}
                 onChange={(e) => onChangeContent(e.target.value)}
-                className="w-full h-full min-h-[500px] text-sm font-sans text-zinc-900 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none leading-relaxed"
+                className="w-full h-full min-h-[380px] sm:min-h-[500px] text-xs sm:text-sm font-sans text-zinc-900 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none leading-relaxed"
                 placeholder="Paste or edit resume text..."
               />
             ) : (
@@ -475,21 +477,21 @@ export function DocumentEditor({
       </div>
 
       {/* Bottom Utility Bar */}
-      <div className="px-5 py-2 border-t border-zinc-200 bg-white flex items-center justify-between text-xs text-zinc-500 flex-shrink-0 flex-wrap gap-2">
-        <div className="flex items-center gap-3">
+      <div className="px-3 sm:px-5 py-2 border-t border-zinc-200 bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-zinc-500 flex-shrink-0 gap-1.5">
+        <div className="flex items-center gap-2 text-[11px] sm:text-xs">
           <span>{wordsCount} words</span>
           <span>•</span>
-          <span>{charsCount} characters</span>
+          <span>{charsCount} chars</span>
           <span>•</span>
           <span className="text-emerald-700 font-medium">Single-Column Verified</span>
         </div>
-        <div className="text-[11px] text-zinc-400 flex items-center gap-2">
+        <div className="text-[10px] sm:text-[11px] text-zinc-400 flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 text-rose-700 font-medium">
-            <span className="w-2 h-2 rounded-full bg-rose-400" /> Weak Bullets (STAR Rewrites)
+            <span className="w-2 h-2 rounded-full bg-rose-400" /> STAR Rewrites
           </span>
           <span>•</span>
           <span className="inline-flex items-center gap-1 text-amber-700 font-medium">
-            <span className="w-2 h-2 rounded-full bg-amber-400" /> Cliché / Buzzwords
+            <span className="w-2 h-2 rounded-full bg-amber-400" /> Buzzwords
           </span>
         </div>
       </div>

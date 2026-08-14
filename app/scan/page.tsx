@@ -190,17 +190,25 @@ export default function ScanWorkspacePage() {
         return;
       }
 
-      if (response.ok) {
-        const json = await response.json();
-        const extracted = normalizeResumeText(json.extractedText || "");
-        setContent(extracted);
-        setScanResult(json.data);
-        sessionStorage.setItem("HIRELY_SCAN_TEXT", extracted);
-        sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", file.name);
-        sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
+      if (!response.ok) {
+        const json = await response.json().catch(() => ({}));
+        alert(json.error || "Could not parse text from this file. Please ensure it is a valid text-based PDF / Word document or paste text directly.");
+        setIsLoading(false);
+        return;
       }
-    } catch (err) {
+
+      const json = await response.json();
+      const extracted = normalizeResumeText(json.extractedText || "");
+      setContent(extracted);
+      setScanResult(json.data);
+      sessionStorage.setItem("HIRELY_SCAN_TEXT", extracted);
+      sessionStorage.setItem("HIRELY_SCAN_DOC_NAME", file.name);
+      sessionStorage.setItem("HIRELY_SCAN_RESULT", JSON.stringify(json.data));
+      setUndoToast({ visible: true, message: `Successfully analyzed "${file.name}"` });
+      setTimeout(() => setUndoToast(null), 4000);
+    } catch (err: any) {
       console.error("File upload scan error:", err);
+      alert(err?.message || "An unexpected error occurred while scanning your resume file.");
     } finally {
       setIsLoading(false);
     }
@@ -359,7 +367,7 @@ export default function ScanWorkspacePage() {
   };
 
   return (
-    <div className="h-screen w-screen bg-white text-zinc-950 flex flex-col overflow-hidden font-sans">
+    <div className="h-[100dvh] w-screen bg-white text-zinc-950 flex flex-col overflow-hidden font-sans">
       <input
         ref={fileInputRef}
         type="file"
@@ -369,63 +377,40 @@ export default function ScanWorkspacePage() {
       />
 
       {/* Top Header Bar */}
-      <header className="h-13 border-b border-zinc-200 bg-white px-4 flex items-center justify-between flex-shrink-0 z-30">
-        <div className="flex items-center gap-3">
+      <header className="h-12 sm:h-13 border-b border-zinc-200 bg-white px-3 sm:px-4 flex items-center justify-between flex-shrink-0 z-30">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-zinc-600 hover:text-zinc-950 text-xs font-medium px-2.5 py-1 rounded-md hover:bg-zinc-100 transition-colors"
+            className="flex items-center gap-1 text-zinc-600 hover:text-zinc-950 text-xs font-medium px-2 py-1 rounded-md hover:bg-zinc-100 transition-colors flex-shrink-0"
+            title="Back to Landing Page"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Home</span>
+            <span className="hidden xs:inline">Home</span>
           </Link>
-          <div className="h-3.5 w-[1px] bg-zinc-200" />
-          <Link href="/" className="flex items-center gap-1.5">
+          <div className="h-3.5 w-[1px] bg-zinc-200 flex-shrink-0" />
+          <Link href="/" className="flex items-center gap-1.5 min-w-0">
             <img
               src="/hirelynav.png"
               alt="Hirely"
-              className="h-5 w-auto object-contain brightness-0"
+              className="h-4 sm:h-5 w-auto object-contain brightness-0 flex-shrink-0"
             />
-            <span className="text-[11px] font-mono text-zinc-400 font-normal">/ studio</span>
+            <span className="text-[10px] sm:text-[11px] font-mono text-zinc-400 font-normal truncate">/ studio</span>
           </Link>
         </div>
 
-        {/* Mobile/Tablet Segment Control Switcher */}
-        <div className="flex lg:hidden items-center p-0.5 rounded-lg bg-zinc-100 border border-zinc-200 text-xs">
-          <button
-            onClick={() => setMobileTab("editor")}
-            className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
-              mobileTab === "editor"
-                ? "bg-white text-zinc-950 shadow-2xs font-semibold"
-                : "text-zinc-600"
-            }`}
-          >
-            <LayoutTemplate className="w-3 h-3 text-blue-600" />
-            <span>Document</span>
-          </button>
-          <button
-            onClick={() => setMobileTab("diagnostic")}
-            className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
-              mobileTab === "diagnostic"
-                ? "bg-white text-zinc-950 shadow-2xs font-semibold"
-                : "text-zinc-600"
-            }`}
-          >
-            <PieChart className="w-3 h-3 text-emerald-600" />
-            <span>ATS Diagnostic ({scanResult?.overallScore || 80}%)</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
+        {/* Right Header Action Buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* Target Role Drawer Toggle */}
           <button
             onClick={() => setJobDrawerOpen(!jobDrawerOpen)}
-            className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors border shadow-2xs ${
+            className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1 sm:gap-1.5 transition-colors border shadow-2xs ${
               jobDrawerOpen
                 ? "bg-blue-50 border-blue-200 text-blue-700 font-semibold"
                 : "bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50"
             }`}
+            title="Target Job Description context"
           >
-            <Briefcase className="w-3.5 h-3.5 text-blue-600" />
+            <Briefcase className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
             <span className="hidden sm:inline">Target Role</span>
             <ChevronDown className={`w-3 h-3 transition-transform ${jobDrawerOpen ? "rotate-180" : ""}`} />
           </button>
@@ -433,36 +418,77 @@ export default function ScanWorkspacePage() {
           {scanResult?.bulletImprovements?.length ? (
             <button
               onClick={handleApplyAllImprovements}
-              className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
+              className="px-2.5 sm:px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1 sm:gap-1.5 transition-colors shadow-2xs"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Apply All ({scanResult.bulletImprovements.length})</span>
+              <span className="hidden xs:inline">Apply All</span>
+              <span className="xs:hidden">All</span>
+              <span>({scanResult.bulletImprovements.length})</span>
             </button>
           ) : null}
 
           <button
             onClick={() => setNewScanModalOpen(true)}
-            className="px-3 py-1 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-800 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
+            className="px-2.5 sm:px-3 py-1 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-800 text-xs font-medium flex items-center gap-1 sm:gap-1.5 transition-colors shadow-2xs"
+            title="Upload new CV"
           >
-            <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
-            <span>Upload CV</span>
+            <UploadCloud className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+            <span className="hidden xs:inline">Upload CV</span>
+            <span className="xs:hidden">Upload</span>
+          </button>
+
+          {/* Mobile Settings Key Button */}
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="lg:hidden p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-zinc-600 hover:text-zinc-950 transition-colors shadow-2xs"
+            title="API Key Settings"
+          >
+            <Key className="w-3.5 h-3.5 text-zinc-600" />
           </button>
         </div>
       </header>
 
+      {/* Dedicated Mobile Segment Tab Bar (Full-Width Switcher on < lg) */}
+      <div className="flex lg:hidden items-center justify-between border-b border-zinc-200 bg-zinc-50 px-3 py-1.5 z-20 flex-shrink-0">
+        <div className="w-full grid grid-cols-2 p-0.5 rounded-xl bg-zinc-200/70 border border-zinc-200 text-xs">
+          <button
+            onClick={() => setMobileTab("editor")}
+            className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 ${
+              mobileTab === "editor"
+                ? "bg-white text-zinc-950 shadow-xs font-bold"
+                : "text-zinc-600 hover:text-zinc-900"
+            }`}
+          >
+            <LayoutTemplate className="w-3.5 h-3.5 text-blue-600" />
+            <span className="truncate">Document View</span>
+          </button>
+          <button
+            onClick={() => setMobileTab("diagnostic")}
+            className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 ${
+              mobileTab === "diagnostic"
+                ? "bg-white text-zinc-950 shadow-xs font-bold"
+                : "text-zinc-600 hover:text-zinc-900"
+            }`}
+          >
+            <PieChart className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="truncate">ATS Score ({scanResult?.overallScore || 80}%)</span>
+          </button>
+        </div>
+      </div>
+
       {/* In-Workspace Collapsible Target Job Description Drawer */}
       {jobDrawerOpen && (
-        <div className="border-b border-zinc-200 bg-white px-6 py-4 shadow-sm z-20 animate-fadeIn">
+        <div className="border-b border-zinc-200 bg-white px-4 sm:px-6 py-4 shadow-sm z-20 animate-fadeIn">
           <div className="max-w-4xl mx-auto space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-1">
               <div className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-blue-600" />
                 <h4 className="text-xs font-bold text-zinc-900 font-sans uppercase">
                   Target Job Description & Role Context
                 </h4>
               </div>
-              <span className="text-[11px] text-zinc-400 font-mono">
-                Paste new job post to re-score keyword match against specific requirements
+              <span className="text-[10px] sm:text-[11px] text-zinc-400 font-mono">
+                Paste job post to re-score ATS keywords
               </span>
             </div>
 
@@ -474,11 +500,11 @@ export default function ScanWorkspacePage() {
               className="w-full p-3 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-blue-500 resize-none font-sans"
             />
 
-            <div className="flex items-center justify-between pt-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-1 gap-2">
               <span className="text-[11px] text-zinc-500">
                 {jobDescription.length ? `${jobDescription.split(/\s+/).filter(Boolean).length} words in target job` : "Using standard industry benchmark role baseline"}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 justify-end">
                 <button
                   onClick={() => setJobDrawerOpen(false)}
                   className="px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-xs font-medium"
@@ -494,7 +520,7 @@ export default function ScanWorkspacePage() {
                   className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-2xs"
                 >
                   <RotateCw className="w-3 h-3" />
-                  <span>Update & Re-scan ATS Score</span>
+                  <span>Update & Re-scan</span>
                 </button>
               </div>
             </div>
@@ -504,7 +530,7 @@ export default function ScanWorkspacePage() {
 
       {/* Main 3-Pane Layout */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Pane 1: Slim Left Sidebar */}
+        {/* Pane 1: Slim Left Sidebar (Hidden on mobile) */}
         <WorkspaceSidebar
           onNewScan={() => setNewScanModalOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -542,11 +568,11 @@ export default function ScanWorkspacePage() {
 
       {/* Interactive Undo Toast Notification */}
       {undoToast && (
-        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 bg-zinc-950 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3 text-xs border border-zinc-800 animate-fadeIn">
-          <span className="font-medium">{undoToast.message}</span>
+        <div className="fixed bottom-6 sm:bottom-12 left-1/2 -translate-x-1/2 z-50 bg-zinc-950 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3 text-xs border border-zinc-800 animate-fadeIn max-w-[92vw]">
+          <span className="font-medium truncate">{undoToast.message}</span>
           <button
             onClick={handleUndo}
-            className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold flex items-center gap-1 transition-colors text-[11px]"
+            className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold flex items-center gap-1 transition-colors text-[11px] flex-shrink-0"
           >
             <Undo2 className="w-3 h-3" />
             <span>Undo</span>
@@ -557,7 +583,7 @@ export default function ScanWorkspacePage() {
       {/* API Key Modal */}
       {settingsOpen && (
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-zinc-200 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="w-full max-w-[92vw] sm:max-w-md max-h-[85vh] overflow-y-auto bg-white border border-zinc-200 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-sm text-zinc-900 flex items-center gap-2">
                 <Key className="w-4 h-4 text-blue-600" />
@@ -596,7 +622,7 @@ export default function ScanWorkspacePage() {
       {/* New Scan Upload Modal */}
       {newScanModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-2xl p-6 shadow-xl space-y-4">
+          <div className="w-full max-w-[92vw] sm:max-w-lg max-h-[85vh] overflow-y-auto bg-white border border-zinc-200 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-sm text-zinc-900 flex items-center gap-2">
                 <UploadCloud className="w-4 h-4 text-blue-600" />
@@ -612,9 +638,9 @@ export default function ScanWorkspacePage() {
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="p-6 rounded-xl border-2 border-dashed border-zinc-200 hover:border-blue-500 bg-zinc-50 hover:bg-blue-50/50 text-center cursor-pointer transition-colors space-y-2"
+              className="p-5 sm:p-6 rounded-xl border-2 border-dashed border-zinc-200 hover:border-blue-500 bg-zinc-50 hover:bg-blue-50/50 text-center cursor-pointer transition-colors space-y-2"
             >
-              <FileText className="w-8 h-8 text-blue-600 mx-auto" />
+              <FileText className="w-7 sm:w-8 h-7 sm:h-8 text-blue-600 mx-auto" />
               <div>
                 <p className="text-xs font-semibold text-zinc-900">
                   Click to select a PDF, DOCX, or TXT file
@@ -632,7 +658,7 @@ export default function ScanWorkspacePage() {
             </div>
 
             <textarea
-              rows={5}
+              rows={4}
               placeholder="Paste resume text here..."
               onChange={(e) => setContent(e.target.value)}
               className="w-full p-3 rounded-lg bg-zinc-50 border border-zinc-200 text-xs focus:outline-none focus:border-blue-600 resize-none font-sans"
@@ -656,10 +682,10 @@ export default function ScanWorkspacePage() {
       {/* Rate Limit Exceeded Modal (3 Scans/Day) */}
       {rateLimitModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-rose-100 rounded-2xl p-6 shadow-2xl space-y-4 animate-fadeIn">
+          <div className="w-full max-w-[92vw] sm:max-w-md max-h-[85vh] overflow-y-auto bg-white border border-rose-100 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-rose-600">
-                <div className="w-8 h-8 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center flex-shrink-0">
                   <ShieldAlert className="w-4 h-4 text-rose-600" />
                 </div>
                 <h3 className="font-semibold text-sm text-zinc-900">
@@ -674,7 +700,7 @@ export default function ScanWorkspacePage() {
               </button>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-rose-50/60 border border-rose-100 text-xs text-zinc-700 space-y-1 leading-relaxed">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-rose-50/60 border border-rose-100 text-xs text-zinc-700 space-y-1 leading-relaxed">
               <p className="font-medium text-rose-950">
                 Free Quota: 3 scans per day per IP
               </p>
@@ -683,9 +709,9 @@ export default function ScanWorkspacePage() {
               </p>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-zinc-700 space-y-1.5 leading-relaxed">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-zinc-700 space-y-1.5 leading-relaxed">
               <p className="font-semibold text-blue-900 flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-blue-600" />
+                <Key className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                 Unlock Unlimited Free Scans:
               </p>
               <p className="text-[11px] text-zinc-600">

@@ -153,23 +153,23 @@ export function DiagnosticPanel({
 
   return (
     <aside className="w-full lg:w-[460px] border-l border-zinc-200 bg-white flex flex-col justify-between flex-shrink-0 overflow-hidden font-sans select-none">
-      {/* 1. Top Tab Bar */}
-      <div className="border-b border-zinc-200 bg-white px-2 flex items-center gap-1 overflow-x-auto text-xs">
+      {/* 1. Top Tab Bar with Smooth Touch Scrolling */}
+      <div className="border-b border-zinc-200 bg-white px-2 flex items-center gap-1 overflow-x-auto text-xs scrollbar-none">
         <button
           onClick={() => setActiveTab("basic")}
-          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-2.5 sm:py-3 px-2 sm:px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap text-xs ${
             activeTab === "basic"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
           }`}
         >
-          <div className="w-3.5 h-3.5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin-slow" />
+          <div className="w-3 h-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin-slow" />
           <span>Basic Scan</span>
         </button>
 
         <button
           onClick={() => setActiveTab("additions")}
-          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-2.5 sm:py-3 px-2 sm:px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap text-xs ${
             activeTab === "additions"
               ? "border-purple-600 text-purple-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -186,7 +186,7 @@ export function DiagnosticPanel({
 
         <button
           onClick={() => setActiveTab("rewrites")}
-          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-2.5 sm:py-3 px-2 sm:px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap text-xs ${
             activeTab === "rewrites"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -203,7 +203,7 @@ export function DiagnosticPanel({
 
         <button
           onClick={() => setActiveTab("keywords")}
-          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-2.5 sm:py-3 px-2 sm:px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap text-xs ${
             activeTab === "keywords"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -220,7 +220,7 @@ export function DiagnosticPanel({
 
         <button
           onClick={() => setActiveTab("benchmark")}
-          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-2.5 sm:py-3 px-2 sm:px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap text-xs ${
             activeTab === "benchmark"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -232,7 +232,7 @@ export function DiagnosticPanel({
 
         <button
           onClick={() => setActiveTab("format")}
-          className={`py-3 px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap ${
+          className={`py-2.5 sm:py-3 px-2 sm:px-2.5 border-b-2 font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap text-xs ${
             activeTab === "format"
               ? "border-blue-600 text-blue-600 font-semibold"
               : "border-transparent text-zinc-600 hover:text-zinc-900"
@@ -244,9 +244,9 @@ export function DiagnosticPanel({
       </div>
 
       {/* Main Body Content */}
-      <div className="flex-1 p-4 lg:p-5 overflow-y-auto space-y-4">
+      <div className="flex-1 p-3.5 sm:p-4 lg:p-5 overflow-y-auto space-y-4">
         {/* Subheader: Title, Feedback & Share/Export Dropdown */}
-        <div className="flex items-center justify-between pb-1 relative">
+        <div className="flex items-center justify-between pb-1 relative flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-zinc-900">
               {activeTab === "basic" && "Basic Scan"}

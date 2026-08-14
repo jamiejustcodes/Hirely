@@ -21,7 +21,7 @@ export function WorkspaceSidebar({
   onOpenSettings,
 }: WorkspaceSidebarProps) {
   return (
-    <aside className="w-14 border-r border-zinc-200 bg-white flex flex-col items-center py-3.5 justify-between flex-shrink-0 z-20 select-none">
+    <aside className="hidden lg:flex w-14 border-r border-zinc-200 bg-white flex-col items-center py-3.5 justify-between flex-shrink-0 z-20 select-none">
       <div className="flex flex-col items-center gap-4 w-full">
         {/* Brand Logo */}
         <Link

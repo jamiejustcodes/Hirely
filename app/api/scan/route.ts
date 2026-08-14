@@ -22,35 +22,81 @@ export async function POST(req: NextRequest) {
       const textParam = (formData.get("resumeText") as string) || "";
 
       if (file && file.size > 0) {
-        fileName = file.name;
+        fileName = file.name || "Uploaded_Resume.pdf";
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const lowerName = file.name.toLowerCase();
+        const lowerName = (file.name || "").toLowerCase();
+        const mimeType = (file.type || "").toLowerCase();
 
-        if (lowerName.endsWith(".pdf")) {
+        // Check magic bytes
+        const isPdfMagic = buffer.length >= 5 && buffer.subarray(0, 5).toString("latin1") === "%PDF-";
+        const isZipMagic = buffer.length >= 4 && buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04;
+        const isPdf = isPdfMagic || lowerName.endsWith(".pdf") || mimeType.includes("pdf");
+        const isDocx = isZipMagic || lowerName.endsWith(".docx") || lowerName.endsWith(".doc") || mimeType.includes("word") || mimeType.includes("officedocument");
+
+        if (isPdf) {
           try {
             const pdfData = await pdfParse(buffer);
-            resumeText = normalizeResumeText(pdfData.text);
+            if (pdfData.text && pdfData.text.trim().length >= 15) {
+              resumeText = normalizeResumeText(pdfData.text);
+            } else {
+              throw new Error("Extracted text was too short, attempting fallback stream extraction");
+            }
           } catch (pdfErr) {
-            console.error("PDF parse error:", pdfErr);
-            return NextResponse.json(
-              { error: "Could not extract text from PDF. Please ensure the PDF is not password-protected or encrypted." },
-              { status: 400 }
-            );
+            console.warn("Primary pdf-parse failed, attempting stream extraction fallback:", pdfErr);
+            // Fallback: Extract text from uncompressed PDF text blocks (Tj / TJ / BT ... ET)
+            try {
+              const rawString = buffer.toString("latin1");
+              const textChunks: string[] = [];
+              
+              // Match text inside (...) Tj
+              const tjRegex = /\(([^)]+)\)\s*Tj/g;
+              let tjMatch;
+              while ((tjMatch = tjRegex.exec(rawString)) !== null) {
+                textChunks.push(tjMatch[1]);
+              }
+
+              // Match array text inside [...] TJ
+              const arrayTjRegex = /\[([^\]]+)\]\s*TJ/g;
+              let arrayMatch;
+              while ((arrayMatch = arrayTjRegex.exec(rawString)) !== null) {
+                const inner = arrayMatch[1];
+                const innerStrings = inner.match(/\(([^)]+)\)/g);
+                if (innerStrings) {
+                  textChunks.push(innerStrings.map(s => s.slice(1, -1)).join(""));
+                }
+              }
+
+              if (textChunks.length > 0) {
+                const recovered = textChunks.join(" ");
+                if (recovered.trim().length >= 15) {
+                  resumeText = normalizeResumeText(recovered);
+                }
+              }
+            } catch (fallbackErr) {
+              console.error("PDF stream fallback error:", fallbackErr);
+            }
+
+            if (!resumeText || resumeText.trim().length < 15) {
+              return NextResponse.json(
+                { error: "Could not extract text from this PDF. If this is a scanned image or photo of a resume, please upload a text-based PDF / DOCX or paste the text directly." },
+                { status: 400 }
+              );
+            }
           }
-        } else if (lowerName.endsWith(".docx") || lowerName.endsWith(".doc")) {
+        } else if (isDocx) {
           try {
             const docxResult = await mammoth.extractRawText({ buffer });
             resumeText = normalizeResumeText(docxResult.value);
           } catch (docxErr) {
             console.error("DOCX parse error:", docxErr);
             return NextResponse.json(
-              { error: "Could not extract text from Word document. Please ensure the file is a valid .docx document." },
+              { error: "Could not extract text from Word document. Please ensure the file is a valid .docx document or paste text directly." },
               { status: 400 }
             );
           }
         } else {
-          // Plain text / Markdown
+          // Plain text / Markdown / UTF-8
           resumeText = normalizeResumeText(buffer.toString("utf-8"));
         }
       } else if (textParam.trim()) {
